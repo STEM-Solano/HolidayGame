@@ -1,14 +1,16 @@
+import {qrScript} from './qr.js';
 export const renderPage = (apiOrigin = '') => `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crowd Score</title>
 <style>
 :root{color-scheme:dark;--ink:#f9f5ee;--muted:#b7b7d1;--panel:#191b35;--line:#353853;--lime:#dbf979;--accent:#bfb0ff}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% 0%,#32265f 0%,transparent 49%),#101122;color:var(--ink);font:1rem system-ui,sans-serif;min-height:100vh}
-main{max-width:1000px;margin:auto;padding:32px 20px 48px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:38px;font-weight:800}small, p{color:var(--muted)}p{line-height:1.55}h1{font-size:clamp(2.2rem,7vw,4.8rem);line-height:1.02;letter-spacing:-.055em;margin:.18em 0 .32em}h2{margin:0 0 15px}h3{margin:0 0 8px}.tag{color:var(--accent);font-weight:750;letter-spacing:.13em;text-transform:uppercase;font-size:.86rem}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:19px;margin-top:26px}.card{background:var(--panel);border:1px solid var(--line);padding:clamp(19px,4vw,32px);border-radius:21px}.highlight{border-color:#565084}.code{font-size:clamp(1.8rem,8vw,3rem);letter-spacing:.13em;color:var(--lime);font-weight:900;margin:7px 0 14px}.controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}button,input{font:inherit;border-radius:11px;min-height:47px}button{padding:10px 16px;font-weight:800;color:#151729;background:var(--lime);border:1px solid transparent;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border-color:#62658a}button:disabled{opacity:.55;cursor:default}input{padding:10px 12px;width:100%;color:var(--ink);background:#111228;border:1px solid #62658a}label{display:block;font-weight:700;margin:12px 0 6px}form button{margin-top:14px}.team,.answer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;overflow-wrap:anywhere}.answer em{font-style:normal;color:var(--lime);font-weight:850}.blank{color:var(--muted)}.points{font-variant-numeric:tabular-nums;color:var(--lime);font-weight:850}.question{font-size:clamp(1.65rem,5.5vw,3.2rem)}#message{color:#ffc9d3;min-height:1.5em;margin-top:16px}a{color:var(--accent)}.tie{display:flex;align-items:center;gap:10px}.tie input{width:22px;min-height:26px}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.grid{grid-template-columns:1fr}header{margin-bottom:24px}main{padding-top:20px}}
+main{max-width:1000px;margin:auto;padding:32px 20px 48px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:38px;font-weight:800}small, p{color:var(--muted)}p{line-height:1.55}h1{font-size:clamp(2.2rem,7vw,4.8rem);line-height:1.02;letter-spacing:-.055em;margin:.18em 0 .32em}h2{margin:0 0 15px}h3{margin:0 0 8px}.tag{color:var(--accent);font-weight:750;letter-spacing:.13em;text-transform:uppercase;font-size:.86rem}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:19px;margin-top:26px}.card{background:var(--panel);border:1px solid var(--line);padding:clamp(19px,4vw,32px);border-radius:21px}.highlight{border-color:#565084}.code{font-size:clamp(1.8rem,8vw,3rem);letter-spacing:.13em;color:var(--lime);font-weight:900;margin:7px 0 14px}.controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}button,input{font:inherit;border-radius:11px;min-height:47px}button{padding:10px 16px;font-weight:800;color:#151729;background:var(--lime);border:1px solid transparent;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border-color:#62658a}button:disabled{opacity:.55;cursor:default}input{padding:10px 12px;width:100%;color:var(--ink);background:#111228;border:1px solid #62658a}label{display:block;font-weight:700;margin:12px 0 6px}form button{margin-top:14px}.team,.answer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;overflow-wrap:anywhere}.answer em{font-style:normal;color:var(--lime);font-weight:850}.blank{color:var(--muted)}.points{font-variant-numeric:tabular-nums;color:var(--lime);font-weight:850}.question{font-size:clamp(1.65rem,5.5vw,3.2rem)}#message{color:#ffc9d3;min-height:1.5em;margin-top:16px}a{color:var(--accent)}.tie{display:flex;align-items:center;gap:10px}.tie input{width:22px;min-height:26px}.join-code{margin:18px 0 10px;display:grid;justify-items:start;gap:7px}.join-code canvas{width:min(100%,220px);height:auto;image-rendering:pixelated;border-radius:8px}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.grid{grid-template-columns:1fr}header{margin-bottom:24px}main{padding-top:20px}}
 </style></head><body><main>
 <header><span>◈ &nbsp; CROWD SCORE</span><small>6 teams · 3 rounds</small></header>
 <div id="app"></div><p id="message" role="status"></p>
 </main><script>
+${qrScript}
 const apiOrigin=${JSON.stringify(apiOrigin)};
 const root=document.querySelector('#app');
 const notice=document.querySelector('#message');
@@ -34,6 +36,30 @@ async function request(path,body,key=session?.key){
 function home(){
   root.innerHTML='<div class="tag">Survey guessing game</div><h1>Guess what<br>the crowd said.</h1><p>Guess the most popular answers from published YouGov polls. Six teams start. Four advance to the semifinal, then two face off in the final.</p><div class="grid"><section class="card highlight"><h2>Join a game</h2><form id="join"><label for="code">Room code</label><input id="code" name="code" value="'+esc(urlCode)+'" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters"><label for="name">Team name</label><input id="name" name="name" maxlength="26" required autocomplete="off"><button>Join team</button> <button type="submit" name="mode" value="watch" formnovalidate class="secondary">Watch live</button></form></section><section class="card"><h2>Host a game</h2><p>Share the room link, then open and reveal each round. You can project this screen for everyone.</p><button id="create">Create room</button></section></div>';
 }
+function roomLink(watch=false){
+  const link=new URL(location.pathname,location.origin);
+  link.searchParams.set('room',session.code);
+  if(watch)link.searchParams.set('watch','1');
+  return link.href;
+}
+
+function drawJoinCode(canvas){
+  const qr=new QREncoder(-1,0);
+  qr.addData(roomLink());
+  qr.make();
+  const quiet=4, scale=8, size=qr.getModuleCount();
+  canvas.width=canvas.height=(size+2*quiet)*scale;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#000';
+  for(let row=0;row<size;row++){
+    for(let col=0;col<size;col++)if(qr.isDark(row,col)){
+      ctx.fillRect((col+quiet)*scale,(row+quiet)*scale,scale,scale);
+    }
+  }
+}
+
 function render(game){
   const signature=JSON.stringify(game);
   if(signature===lastView) return;
@@ -48,7 +74,7 @@ function render(game){
   const teamList=teams.map(t=>'<div class="team"><div><strong>'+esc(t.name)+'</strong>'+(!t.active?' <small>· eliminated</small>':'')+(game.phase==='open'&&t.submitted?' <small>· locked in</small>':'')+(game.phase==='reveal'&&t.guess?'<br><small>'+esc(t.guess)+' · +'+t.points+'</small>':'')+'</div><span class="points">'+t.score+'</span></div>').join('');
   let panel='';
   if(game.phase==='lobby'){
-    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?'<div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button></div>':'<p>Waiting for the host to start.</p>');
+    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?'<div class="join-code"><strong>Scan to join a team</strong><canvas id="join-qr" role="img" aria-label="QR code to join this room"></canvas></div><div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button></div>':'<p>Waiting for the host to start.</p>');
   } else if(game.phase==='advancement'){
     panel='<div class="tag">Advancement</div><h1 class="question">'+(game.qualified.length===4?'Semifinal teams':'Final face-off')+'</h1>'+game.qualified.map(name=>'<div class="answer"><strong>'+esc(name)+'</strong></div>').join('')+(host?'<div class="controls"><button id="advance">Start '+(game.qualified.length===4?'semifinal':'final')+'</button></div>':'<p>Waiting for the host to start the next round.</p>');
   } else if(game.phase==='finished'){
@@ -74,6 +100,8 @@ function render(game){
     }
   }
   root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(viewer||host?'Scoreboard':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+(game.phase==='finished'?'<div class="controls"><button class="secondary" id="leave">Back to start</button></div>':'')+'</aside></div>';
+  const canvas=root.querySelector('#join-qr');
+  if(canvas)drawJoinCode(canvas);
   if(active && priorDraft!==undefined){
     const replacement=root.querySelector('#guess-answer');
     replacement?.focus();
@@ -104,10 +132,9 @@ root.addEventListener('click',event=>{
   const id=event.target.id;
   if(id==='create')void act(async()=>{remember(await request('/api/create',{}));});
   if(id==='copy'||id==='watch-copy')void act(async()=>{
-    const link=new URL(location.pathname,location.origin); link.searchParams.set('room',session.code);
-    if(id==='watch-copy')link.searchParams.set('watch','1');
-    try{await navigator.clipboard.writeText(link.href);message('Join link copied.');}
-    catch{message('Join link: '+link.href);}
+    const link=roomLink(id==='watch-copy');
+    try{await navigator.clipboard.writeText(link);message('Link copied.');}
+    catch{message('Room link: '+link);}
   });
   if(id==='advance')void act(async()=>{const game=await request(endpoint(),{action:'advance',phase:current.phase,round:current.round,picks:[...root.querySelectorAll('[name=pick]:checked')].map(input=>input.value)});current=game;render(game);});
   if(id==='leave'){if(session.role!=='watch')remember(null);location.href=location.pathname;}
