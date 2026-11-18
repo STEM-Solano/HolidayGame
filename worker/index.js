@@ -1,6 +1,18 @@
 import {polls} from './polls.js';
 import {page} from './page.js';
 
+const pagesOrigin = 'https://stem-solano.github.io';
+
+function withCors(request, response) {
+  if (request.headers.get('Origin') === pagesOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', pagesOrigin);
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, X-Player-Key');
+    response.headers.append('Vary', 'Origin');
+  }
+  return response;
+}
+
 const ttl = 12 * 60 * 60 * 1000;
 const token = () => crypto.randomUUID();
 const clean = value => String(value ?? '').slice(0, 120).trim();
@@ -138,7 +150,8 @@ export default {
     const path=new URL(request.url).pathname;
     if(path==='/') return new Response(page,{headers:{'Content-Type':'text/html; charset=utf-8','X-Content-Type-Options':'nosniff'}});
     if(!path.startsWith('/api/')) return fail('Page not found.',404);
-    try { return await api(request,env.DB,path); }
-    catch(error) { console.error(error.message); return fail('Could not reach the game server. Try again.',503); }
+    if(request.method==='OPTIONS') return withCors(request,new Response(null,{status:204}));
+    try { return withCors(request,await api(request,env.DB,path)); }
+    catch(error) { console.error(error.message); return withCors(request,fail('Could not reach the game server. Try again.',503)); }
   }
 };
