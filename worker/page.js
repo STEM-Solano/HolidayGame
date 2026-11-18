@@ -1,4 +1,4 @@
-export const page = `<!doctype html>
+export const renderPage = (apiOrigin = '') => `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crowd Score</title>
 <style>
@@ -9,6 +9,7 @@ main{max-width:1000px;margin:auto;padding:32px 20px 48px}header{display:flex;jus
 <header><span>◈ &nbsp; CROWD SCORE</span><small>6 teams · 3 rounds</small></header>
 <div id="app"></div><p id="message" role="status"></p>
 </main><script>
+const apiOrigin=${JSON.stringify(apiOrigin)};
 const root=document.querySelector('#app');
 const notice=document.querySelector('#message');
 const urlCode=(new URLSearchParams(location.search).get('room')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
@@ -25,7 +26,7 @@ function remember(value){
   if(value) localStorage.setItem(storageKey,JSON.stringify(value)); else localStorage.removeItem(storageKey);
 }
 async function request(path,body,key=session?.key){
-  const response=await fetch(path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(key?{'X-Player-Key':key}:{})},body:body?JSON.stringify(body):undefined});
+  const response=await fetch(apiOrigin+path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(key?{'X-Player-Key':key}:{})},body:body?JSON.stringify(body):undefined});
   const data=await response.json();
   if(!response.ok) throw Object.assign(new Error(data.error||'Request failed.'),{status:response.status});
   return data;
@@ -103,13 +104,13 @@ root.addEventListener('click',event=>{
   const id=event.target.id;
   if(id==='create')void act(async()=>{remember(await request('/api/create',{}));});
   if(id==='copy'||id==='watch-copy')void act(async()=>{
-    const link=new URL(location.origin+'/'); link.searchParams.set('room',session.code);
+    const link=new URL(location.pathname,location.origin); link.searchParams.set('room',session.code);
     if(id==='watch-copy')link.searchParams.set('watch','1');
     try{await navigator.clipboard.writeText(link.href);message('Join link copied.');}
     catch{message('Join link: '+link.href);}
   });
   if(id==='advance')void act(async()=>{const game=await request(endpoint(),{action:'advance',phase:current.phase,round:current.round,picks:[...root.querySelectorAll('[name=pick]:checked')].map(input=>input.value)});current=game;render(game);});
-  if(id==='leave'){if(session.role!=='watch')remember(null);location.href='/';}
+  if(id==='leave'){if(session.role!=='watch')remember(null);location.href=location.pathname;}
 });
 root.addEventListener('submit',event=>{
   event.preventDefault();
@@ -132,3 +133,5 @@ root.addEventListener('submit',event=>{
 if(session){root.textContent='Connecting to room…';void refresh();}else home();
 setInterval(refresh,1400);
 </script></body></html>`;
+
+export const page = renderPage();
