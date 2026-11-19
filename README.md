@@ -11,6 +11,12 @@ A host-led survey guessing game for six teams, using published YouGov poll resul
 
 The local server keeps rooms in memory until it stops. Room codes expire after 12 hours.
 
+## Test with AI teams
+
+Create a room on the host screen and join as a human team from a phone or a private browser window. In the host lobby, choose **Start with 5 AI teams**. With two to five human teams, the button fills only the remaining slots.
+
+AI teams automatically lock one randomly selected survey answer per question. They earn points and advance under the same rules as human teams. The host still controls reveals, advancement, and tiebreakers.
+
 ## Game format
 
 - Opening round: six teams answer two questions. Four advance.

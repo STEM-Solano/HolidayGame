@@ -1339,10 +1339,14 @@ function render(game){
   const host=game.role==='host';
   const viewer=game.role==='watch';
   const teams=[...game.teams].sort((a,b)=>Number(b.active)-Number(a.active)||b.score-a.score);
-  const teamList=teams.map(t=>'<div class="team"><div><strong>'+esc(t.name)+'</strong>'+(!t.active?' <small>· eliminated</small>':'')+(game.phase==='open'&&t.submitted?' <small>· locked in</small>':'')+(game.phase==='reveal'&&t.guess?'<br><small>'+esc(t.guess)+' · +'+t.points+'</small>':'')+'</div><span class="points">'+t.score+'</span></div>').join('');
+  const teamList=teams.map(t=>'<div class="team"><div><strong>'+esc(t.name)+'</strong>'+(t.ai?' <small>· AI</small>':'')+(!t.active?' <small>· eliminated</small>':'')+(game.phase==='open'&&t.submitted?' <small>· locked in</small>':'')+(game.phase==='reveal'&&t.guess?'<br><small>'+esc(t.guess)+' · +'+t.points+'</small>':'')+'</div><span class="points">'+t.score+'</span></div>').join('');
   let panel='';
   if(game.phase==='lobby'){
-    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?'<div class="join-code"><strong>Scan to join a team</strong><canvas id="join-qr" role="img" aria-label="QR code to join this room"></canvas></div><div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button></div>':'<p>Waiting for the host to start.</p>');
+    const emptySlots=6-teams.length;
+    const aiStart=teams.length>0 && emptySlots>0
+      ? '<button id="advance-ai">Start with '+emptySlots+' AI '+(emptySlots===1?'team':'teams')+'</button>'
+      : '';
+    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?'<div class="join-code"><strong>Scan to join a team</strong><canvas id="join-qr" role="img" aria-label="QR code to join this room"></canvas></div><div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button>'+aiStart+'</div>':'<p>Waiting for the host to start.</p>');
   } else if(game.phase==='advancement'){
     panel='<div class="tag">Advancement</div><h1 class="question">'+(game.qualified.length===4?'Semifinal teams':'Final face-off')+'</h1>'+game.qualified.map(name=>'<div class="answer"><strong>'+esc(name)+'</strong></div>').join('')+(host?'<div class="controls"><button id="advance">Start '+(game.qualified.length===4?'semifinal':'final')+'</button></div>':'<p>Waiting for the host to start the next round.</p>');
   } else if(game.phase==='finished'){
@@ -1404,7 +1408,7 @@ root.addEventListener('click',event=>{
     try{await navigator.clipboard.writeText(link);message('Link copied.');}
     catch{message('Room link: '+link);}
   });
-  if(id==='advance')void act(async()=>{const game=await request(endpoint(),{action:'advance',phase:current.phase,round:current.round,picks:[...root.querySelectorAll('[name=pick]:checked')].map(input=>input.value)});current=game;render(game);});
+  if(id==='advance'||id==='advance-ai')void act(async()=>{const game=await request(endpoint(),{action:'advance',fillWithAi:id==='advance-ai',phase:current.phase,round:current.round,picks:[...root.querySelectorAll('[name=pick]:checked')].map(input=>input.value)});current=game;render(game);});
   if(id==='leave'){if(session.role!=='watch')remember(null);location.href=location.pathname;}
 });
 root.addEventListener('submit',event=>{

@@ -47,7 +47,7 @@ function view(state, role, team) {
     tiebreak: cutoff && cutoff.tied.length>cutoff.slots ? {names:cutoff.tied.map(t=>t.name),slots:cutoff.slots} : null,
     submitted: team && Object.hasOwn(state.guesses,team.key),
     teams: state.teams.map(t=>({
-      name:t.name, score:t.score, active:t.active, submitted:Object.hasOwn(state.guesses,t.key),
+      name:t.name, ai:t.ai === true, score:t.score, active:t.active, submitted:Object.hasOwn(state.guesses,t.key),
       ...(reveal && t.active ? {guess:state.guesses[t.key]?.text, points:state.guesses[t.key]?.points ?? 0} : {})
     }))
   };
@@ -95,7 +95,15 @@ async function api(request, db, path) {
       state.teams.push({key:newKey,name,score:0,active:true});
       result={key:newKey,code,role:'team'};
     } else if(host && body.action==='advance' && body.round===state.round+1 && body.phase===state.phase){
-      if(state.phase==='lobby' && state.teams.length!==6) return fail('All six teams must join before starting.');
+      if(state.phase==='lobby' && state.teams.length<6){
+        if(body.fillWithAi!==true) return fail('All six teams must join before starting.');
+        if(!state.teams.length) return fail('At least one human team must join first.');
+        for(let number=1; state.teams.length<6; number++){
+          const name='AI Team '+number;
+          if(state.teams.some(t=>t.name.toLowerCase()===name.toLowerCase())) continue;
+          state.teams.push({key:token(),name,score:0,active:true,ai:true});
+        }
+      }
       if(state.phase==='open'){
         state.phase='reveal';
         const answers=polls[state.round][4];
@@ -130,8 +138,13 @@ async function api(request, db, path) {
         state.round++;
         state.phase='open';
         state.guesses={};
+        const answers=polls[state.round][4];
+        for(const t of state.teams.filter(team=>team.active && team.ai)){
+          const [answer]=answers[Math.floor(Math.random()*answers.length)];
+          state.guesses[t.key]={text:answer};
+        }
       } else return fail('The game has ended.');
-    } else if(team?.active && body.action==='guess'){
+    } else if(team?.active && !team.ai && body.action==='guess'){
       const answer=clean(body.answer);
       if(state.phase!=='open'||body.round!==state.round+1) return fail('This round is closed.');
       if(!answer) return fail('Enter one guess.');
