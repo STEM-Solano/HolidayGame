@@ -6,14 +6,16 @@ export const renderPage = (apiOrigin = '') => `<!doctype html>
 :root{color-scheme:dark;--ink:#f9f5ee;--muted:#b7b7d1;--panel:#191b35;--line:#353853;--lime:#dbf979;--accent:#bfb0ff}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% 0%,#32265f 0%,transparent 49%),#101122;color:var(--ink);font:1rem system-ui,sans-serif;min-height:100vh}
 main{max-width:1000px;margin:auto;padding:32px 20px 48px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:38px;font-weight:800}small, p{color:var(--muted)}p{line-height:1.55}h1{font-size:clamp(2.2rem,7vw,4.8rem);line-height:1.02;letter-spacing:-.055em;margin:.18em 0 .32em}h2{margin:0 0 15px}h3{margin:0 0 8px}.tag{color:var(--accent);font-weight:750;letter-spacing:.13em;text-transform:uppercase;font-size:.86rem}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:19px;margin-top:26px}.card{background:var(--panel);border:1px solid var(--line);padding:clamp(19px,4vw,32px);border-radius:21px}.highlight{border-color:#565084}.code{font-size:clamp(1.8rem,8vw,3rem);letter-spacing:.13em;color:var(--lime);font-weight:900;margin:7px 0 14px}.controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}button,input{font:inherit;border-radius:11px;min-height:47px}button{padding:10px 16px;font-weight:800;color:#151729;background:var(--lime);border:1px solid transparent;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border-color:#62658a}button:disabled{opacity:.55;cursor:default}input{padding:10px 12px;width:100%;color:var(--ink);background:#111228;border:1px solid #62658a}label{display:block;font-weight:700;margin:12px 0 6px}form button{margin-top:14px}.team,.answer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;overflow-wrap:anywhere}.answer em{font-style:normal;color:var(--lime);font-weight:850}.blank{color:var(--muted)}.points{font-variant-numeric:tabular-nums;color:var(--lime);font-weight:850}.question{font-size:clamp(1.65rem,5.5vw,3.2rem)}#message{color:#ffc9d3;min-height:1.5em;margin-top:16px}a{color:var(--accent)}.tie{display:flex;align-items:center;gap:10px}.tie input{width:22px;min-height:26px}.join-code{margin:18px 0 10px;display:grid;justify-items:start;gap:7px}.join-code canvas{width:min(100%,220px);height:auto;image-rendering:pixelated;border-radius:8px}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.grid{grid-template-columns:1fr}header{margin-bottom:24px}main{padding-top:20px}}
+dialog{width:min(680px,calc(100% - 28px));max-height:90dvh;padding:24px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px}dialog::backdrop{background:#08091ab8}dialog details{padding:12px 0;border-bottom:1px solid var(--line)}dialog summary{cursor:pointer;font-weight:700}dialog textarea{width:100%;padding:10px 12px;background:#111228;color:var(--ink);border:1px solid #62658a;border-radius:11px;font:inherit;resize:vertical}dialog [role=status]{color:#ffc9d3}dialog .controls{position:sticky;bottom:-24px;padding:12px 0;background:var(--panel)}
 </style></head><body><main>
 <header><span>◈ &nbsp; CROWD SCORE</span><small>6 teams · 3 rounds</small></header>
 <div id="app"></div><p id="message" role="status"></p>
-</main><script>
+<dialog id="question-editor" aria-labelledby="question-editor-title"></dialog></main><script>
 ${qrScript}
 const apiOrigin=${JSON.stringify(apiOrigin)};
 const root=document.querySelector('#app');
 const notice=document.querySelector('#message');
+const questionEditor=document.querySelector('#question-editor');
 const urlCode=(new URLSearchParams(location.search).get('room')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
 const watching=new URLSearchParams(location.search).get('watch')==='1';
 const storageKey='crowd-score-session-v2';
@@ -78,7 +80,11 @@ function render(game){
     const aiStart=teams.length>0 && emptySlots>0
       ? '<button id="advance-ai">Start with '+emptySlots+' AI '+(emptySlots===1?'team':'teams')+'</button>'
       : '';
-    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?'<div class="join-code"><strong>Scan to join a team</strong><canvas id="join-qr" role="img" aria-label="QR code to join this room"></canvas></div><div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button>'+aiStart+'</div>':'<p>Waiting for the host to start.</p>');
+    const customCount=game.questionSetup?.filter(question=>question.prompt).length??0;
+    const editQuestions=game.questionSetup
+      ? '<button class="secondary" id="edit-questions">Edit questions'+(customCount?' ('+customCount+' custom)':'')+'</button>'
+      : '';
+    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?'<div class="join-code"><strong>Scan to join a team</strong><canvas id="join-qr" role="img" aria-label="QR code to join this room"></canvas></div><div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button>'+aiStart+editQuestions+'</div>':'<p>Waiting for the host to start.</p>');
   } else if(game.phase==='advancement'){
     panel='<div class="tag">Advancement</div><h1 class="question">'+(game.qualified.length===4?'Semifinal teams':'Final face-off')+'</h1>'+game.qualified.map(name=>'<div class="answer"><strong>'+esc(name)+'</strong></div>').join('')+(host?'<div class="controls"><button id="advance">Start '+(game.qualified.length===4?'semifinal':'final')+'</button></div>':'<p>Waiting for the host to start the next round.</p>');
   } else if(game.phase==='finished'){
@@ -88,7 +94,7 @@ function render(game){
     panel='<div class="tag">'+esc(game.stage)+' · Question '+game.questionNumber+' of '+(game.questionsPerRound??2)+'</div><h1 class="question">'+esc(game.question)+'</h1>';
     if(revealed){
       panel+=game.board.map((a,i)=>'<div class="answer"><span>'+(i+1)+'. '+esc(a.answer)+'</span><em>'+a.points+'</em></div>').join('');
-      panel+='<p><a href="'+esc(game.source)+'" target="_blank" rel="noopener noreferrer">YouGov poll · '+game.year+'</a></p>';
+      if(game.source) panel+='<p><a href="'+esc(game.source)+'" target="_blank" rel="noopener noreferrer">YouGov poll · '+game.year+'</a></p>';
       if(host){
         if(game.lastQuestion && game.tiebreak){
           panel+='<p>Tie at the cutoff. Select '+game.tiebreak.slots+' tied team(s) after your tiebreaker.</p>'+game.tiebreak.names.map(name=>'<label class="tie"><input type="checkbox" name="pick" value="'+esc(name)+'"> '+esc(name)+'</label>').join('');
@@ -100,7 +106,7 @@ function render(game){
       else if(viewer||game.eliminated) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.active).length+' teams locked in. Results appear when the host reveals them.</p>';
       else if(game.submitted) panel+='<p>Guess locked in. The host will reveal the results.</p>';
       else panel+='<form id="guess"><label for="guess-answer">Your team’s guess</label><input id="guess-answer" name="answer" data-round="'+game.round+'" value="'+esc(priorDraft)+'" maxlength="120" required autocomplete="off"><button>Lock in guess</button></form>';
-      panel+='<p><small>'+game.slots+' answers on the board. Higher survey percentages earn more points.</small></p>';
+      panel+='<p><small>'+game.slots+' answers on the board.</small></p>';
     }
   }
   root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(viewer||host?'Scoreboard':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+(game.phase==='finished'?'<div class="controls"><button class="secondary" id="leave">Back to start</button></div>':'')+'</aside></div>';
@@ -132,8 +138,56 @@ async function act(work){
   try{await work();}catch(error){message(error.message);}
   finally{busy=false;void refresh();}
 }
+function editQuestions(game){
+  const count=game.questionsPerRound;
+  const stages=['Opening round','Semifinal','Final face-off'];
+  const slots=game.questionSetup.map((question,index)=>{
+    const heading=index%count===0?'<h3>'+stages[Math.floor(index/count)]+'</h3>':'';
+    return heading+'<details><summary>Question '+(index%count+1)+' · '+(question.prompt?'Custom':'Built-in')+'</summary><p>'+esc(question.defaultPrompt)+'</p>'+
+      '<label for="prompt-'+index+'">Custom question</label><input id="prompt-'+index+'" name="prompt" maxlength="240" value="'+esc(question.prompt)+'">'+
+      '<label for="answers-'+index+'">Answers and points</label><textarea id="answers-'+index+'" name="answers" rows="4" maxlength="8500" placeholder="Hot chocolate | 40 | cocoa">'+esc(question.answers)+'</textarea></details>';
+  }).join('');
+  questionEditor.innerHTML='<h2 id="question-editor-title">Edit questions</h2><p>Replace any of the 15 questions. Leave both fields blank to use the built-in question.</p><p>Enter 2 to 10 answers, one per line. Use <strong>Answer | Points | Alternate spelling</strong>. Points must be whole numbers from 1 to 100. Alternate spellings are optional.</p><form>'+slots+'<p role="status"></p><div class="controls"><button>Save questions</button><button type="button" class="secondary" id="close-editor">Cancel</button></div></form>';
+  questionEditor.scrollTop=0;
+  questionEditor.showModal();
+}
+questionEditor.addEventListener('click',event=>{
+  if(event.target.id==='close-editor') questionEditor.close();
+});
+questionEditor.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(busy) return;
+  const form=new FormData(event.target);
+  const answers=form.getAll('answers');
+  const questions=form.getAll('prompt').map((prompt,index)=>({prompt,answers:answers[index]}));
+  const status=questionEditor.querySelector('[role=status]');
+  const button=questionEditor.querySelector('button');
+  status.textContent='';
+  button.disabled=true;
+  busy=true;
+  epoch++;
+  try{
+    current=await request(endpoint(),{action:'saveQuestions',questions});
+    render(current);
+    questionEditor.close();
+    message('Questions saved.');
+  }catch(error){
+    status.textContent=error.message;
+    const question=Number(error.message.match(/^Question ([0-9]+):/)?.[1]);
+    if(question){
+      const field=questionEditor.querySelector('#prompt-'+(question-1));
+      field.closest('details').open=true;
+      field.scrollIntoView({block:'nearest'});
+    }
+  }finally{
+    button.disabled=false;
+    busy=false;
+    void refresh();
+  }
+});
 root.addEventListener('click',event=>{
   const id=event.target.id;
+  if(id==='edit-questions' && !busy) editQuestions(current);
   if(id==='create')void act(async()=>{remember(await request('/api/create',{}));});
   if(id==='copy'||id==='watch-copy')void act(async()=>{
     const link=roomLink(id==='watch-copy');

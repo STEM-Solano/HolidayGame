@@ -27,6 +27,45 @@ const formats = {
   3: {polls, questionsPerRound:5}
 };
 
+function parseCustomQuestions(questions, count) {
+  if(!Array.isArray(questions) || questions.length!==count) throw new Error('Submit all question slots.');
+  return questions.map((entry,index)=>{
+    if(!entry || typeof entry.prompt!=='string' || typeof entry.answers!=='string'){
+      throw new Error('Invalid question '+(index+1)+'.');
+    }
+    const prompt=entry.prompt.trim();
+    const rows=entry.answers.trim().split(/\r?\n/).filter(row=>row.trim());
+    if(!prompt && !rows.length) return null;
+    const failQuestion=message=>{throw new Error('Question '+(index+1)+': '+message);};
+    if(!prompt || prompt.length>240) failQuestion('Enter a question of up to 240 characters.');
+    if(rows.length<2 || rows.length>10) failQuestion('Enter 2 to 10 answers.');
+    const seen=new Set();
+    const answers=rows.map(row=>{
+      const [label,points,...aliases]=row.split('|').map(part=>part.trim());
+      if(!/^\d{1,3}$/.test(points??'') || Number(points)<1 || Number(points)>100){
+        failQuestion('Give each answer a whole-number point value from 1 to 100.');
+      }
+      if(aliases.length>5) failQuestion('Use up to five alternate spellings per answer.');
+      const spellings=new Set();
+      for(const text of [label,...aliases]){
+        const normalized=normalize(text);
+        if(!normalized || text.length>120) failQuestion('Use 1 to 120 characters for each answer or alternate spelling.');
+        if(seen.has(normalized) || seen.has(normalized+'s') || (normalized.endsWith('s') && seen.has(normalized.slice(0,-1)))){
+          failQuestion('Use distinct spellings for different answers.');
+        }
+        spellings.add(normalized);
+      }
+      for(const spelling of spellings) seen.add(spelling);
+      return [label,Number(points),...aliases];
+    }).sort((a,b)=>b[1]-a[1]);
+    return ['Host question',prompt,null,null,answers];
+  });
+}
+
+function questionAt(state, polls) {
+  return state.customQuestions?.[state.round] ?? polls[state.round];
+}
+
 function qualification(state, stageIndex) {
   const limit = [4, 2, 1][stageIndex];
   const ranked = state.teams.filter(t=>t.active).sort((a,b)=>b.score-a.score);
@@ -40,7 +79,7 @@ function view(state, role, team) {
   const {polls,questionsPerRound} = formats[state.version];
   const stageIndex = Math.floor(state.round / questionsPerRound);
   const questionNumber = state.round % questionsPerRound + 1;
-  const poll = polls[state.round];
+  const poll = questionAt(state, polls);
   const reveal = state.phase === 'reveal';
   const live = state.phase === 'open' || reveal;
   const lastQuestion = reveal && questionNumber === questionsPerRound;
@@ -51,9 +90,19 @@ function view(state, role, team) {
     stage: live ? stages[stageIndex] : null, questionNumber: live ? questionNumber : null, questionsPerRound,
     lastQuestion, finalQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
     question: live ? poll[1] : null, slots: live ? poll[4].length : null,
-    source: reveal ? 'https://yougov.com/en-us/' + poll[2] : null,
+    source: reveal && poll[2] ? 'https://yougov.com/en-us/' + poll[2] : null,
     year: reveal ? poll[3] : null, board: reveal ? poll[4].map(([answer,points])=>({answer,points})) : [],
     tiebreak: cutoff && cutoff.tied.length>cutoff.slots ? {names:cutoff.tied.map(t=>t.name),slots:cutoff.slots} : null,
+    ...(role==='host' && state.phase==='lobby' && state.version===3 ? {
+      questionSetup: polls.map((poll,index)=>{
+        const custom=state.customQuestions?.[index];
+        return {
+          defaultPrompt:poll[1],
+          prompt:custom?.[1]??'',
+          answers:custom?.[4].map(row=>row.join(' | ')).join('\n')??''
+        };
+      })
+    } : {}),
     submitted: team && Object.hasOwn(state.guesses,team.key),
     teams: state.teams.map(t=>({
       name:t.name, ai:t.ai === true, score:t.score, active:t.active, submitted:Object.hasOwn(state.guesses,t.key),
@@ -104,6 +153,12 @@ async function api(request, db, path) {
       const newKey=token();
       state.teams.push({key:newKey,name,score:0,active:true});
       result={key:newKey,code,role:'team'};
+    } else if(host && body.action==='saveQuestions' && state.phase==='lobby' && state.version===3){
+      try {
+        state.customQuestions=parseCustomQuestions(body.questions,polls.length);
+      } catch(error) {
+        return fail(error.message);
+      }
     } else if(host && body.action==='advance' && body.round===state.round+1 && body.phase===state.phase){
       if(state.phase==='lobby' && state.teams.length<6){
         if(body.fillWithAi!==true) return fail('All six teams must join before starting.');
@@ -116,7 +171,7 @@ async function api(request, db, path) {
       }
       if(state.phase==='open'){
         state.phase='reveal';
-        const answers=polls[state.round][4];
+        const answers=questionAt(state,polls)[4];
         for(const t of state.teams){
           const guess=state.guesses[t.key];
           if(!guess) continue;
@@ -148,7 +203,7 @@ async function api(request, db, path) {
         state.round++;
         state.phase='open';
         state.guesses={};
-        const answers=polls[state.round][4];
+        const answers=questionAt(state,polls)[4];
         for(const t of state.teams.filter(team=>team.active && team.ai)){
           const [answer]=answers[Math.floor(Math.random()*answers.length)];
           state.guesses[t.key]={text:answer};

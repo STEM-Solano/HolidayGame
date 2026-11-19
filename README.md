@@ -17,13 +17,19 @@ Create a room on the host screen and join as a human team from a phone or a priv
 
 AI teams automatically lock one randomly selected survey answer per question. They earn points and advance under the same rules as human teams. The host still controls reveals, advancement, and tiebreakers.
 
+## Use your own questions
+
+In the host lobby, choose **Edit questions**. Replace any of the 15 questions and enter 2–10 answers with points. Use one answer per line in the format `Answer | Points | Alternate spelling`. Points are whole numbers from 1 to 100. Add optional alternate spellings with extra pipe separators. Leave both fields blank in any slot to use its original YouGov question.
+
+Save before starting. The questions apply to that room, and players see the answers when the host reveals them.
+
 ## Game format
 
 - Opening round: six teams answer five questions. Four advance.
 - Semifinal: four teams answer five questions. Two advance.
 - Face-off: two teams answer five questions. The higher score wins.
 
-Active teams start each round at zero. Each team can lock one guess per question. Matching answers earn the corresponding published survey percentage as points. The host reveals each answer board, confirms who advances, and starts the next round. For a tie at the cutoff, the host runs a tiebreaker and selects the winning team or teams on the host screen.
+Active teams start each round at zero. Each team can lock one guess per question. Matching answers earn the published survey percentage or host-assigned points. The host reveals each answer board, confirms who advances, and starts the next round. For a tie at the cutoff, the host runs a tiebreaker and selects the winning team or teams on the host screen.
 
 Spectators can watch the scoreboard, reveals, and advancement screens without taking a team slot. The source poll is linked on each reveal.
 
