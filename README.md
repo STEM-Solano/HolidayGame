@@ -17,9 +17,9 @@ Create a room on the host screen and join as a human team from a phone or a priv
 
 AI teams automatically lock one randomly selected survey answer per question. They earn points and advance under the same rules as human teams. The host still controls reveals, advancement, and tiebreakers.
 
-## Use your own questions
+## Choose or write questions
 
-In the host lobby, choose **Edit questions**. Replace any of the 15 questions and enter 2–10 answers with points. Use one answer per line in the format `Answer | Points | Alternate spelling`. Points are whole numbers from 1 to 100. Add optional alternate spellings with extra pipe separators. Leave both fields blank in any slot to use its original YouGov question.
+In the host lobby, choose **Edit questions**. Each round starts with five preselected questions. For each slot, choose any of the 50 fixed YouGov questions or select **Write a custom question** and enter 2–10 answers with points. Each YouGov question can appear once per game. Use one answer per line in the format `Answer | Points | Alternate spelling`. Points are whole numbers from 1 to 100. Add optional alternate spellings with extra pipe separators.
 
 Save before starting. The questions apply to that room, and players see the answers when the host reveals them.
 

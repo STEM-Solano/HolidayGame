@@ -1,4 +1,4 @@
-import {legacyPolls,polls} from './polls.js';
+import {legacyPolls,polls,questionBank} from './polls.js';
 import {page} from './page.js';
 
 const pagesOrigin = 'https://stem-solano.github.io';
@@ -33,6 +33,7 @@ function parseCustomQuestions(questions, count) {
     if(!entry || typeof entry.prompt!=='string' || typeof entry.answers!=='string'){
       throw new Error('Invalid question '+(index+1)+'.');
     }
+    if(Number.isInteger(entry.bankIndex)) return null;
     const prompt=entry.prompt.trim();
     const rows=entry.answers.trim().split(/\r?\n/).filter(row=>row.trim());
     if(!prompt && !rows.length) return null;
@@ -63,7 +64,8 @@ function parseCustomQuestions(questions, count) {
 }
 
 function questionAt(state, polls) {
-  return state.customQuestions?.[state.round] ?? polls[state.round];
+  return state.customQuestions?.[state.round] ??
+    questionBank[state.selectedPolls?.[state.round]] ?? polls[state.round];
 }
 
 function qualification(state, stageIndex) {
@@ -94,10 +96,12 @@ function view(state, role, team) {
     year: reveal ? poll[3] : null, board: reveal ? poll[4].map(([answer,points])=>({answer,points})) : [],
     tiebreak: cutoff && cutoff.tied.length>cutoff.slots ? {names:cutoff.tied.map(t=>t.name),slots:cutoff.slots} : null,
     ...(role==='host' && state.phase==='lobby' && state.version===3 ? {
+      questionBank:questionBank.map(([title,prompt])=>({title,prompt})),
       questionSetup: polls.map((poll,index)=>{
         const custom=state.customQuestions?.[index];
         return {
           defaultPrompt:poll[1],
+          bankIndex:custom ? null : (state.selectedPolls?.[index]??index),
           prompt:custom?.[1]??'',
           answers:custom?.[4].map(row=>row.join(' | ')).join('\n')??''
         };
@@ -168,7 +172,24 @@ async function api(request, db, path) {
       }
     } else if(host && body.action==='saveQuestions' && state.phase==='lobby' && state.version===3){
       try {
-        state.customQuestions=parseCustomQuestions(body.questions,polls.length);
+        const customQuestions=parseCustomQuestions(body.questions,polls.length);
+        const used=new Set();
+        const selectedPolls=body.questions.map((entry,index)=>{
+          const bankIndex=entry.bankIndex??state.selectedPolls?.[index]??index;
+          if(!Number.isInteger(bankIndex) || bankIndex<0 || bankIndex>=questionBank.length){
+            throw new Error('Question '+(index+1)+': Choose a question from the bank.');
+          }
+          if(entry.bankIndex===null && !customQuestions[index]){
+            throw new Error('Question '+(index+1)+': Enter your custom question and answers.');
+          }
+          if(!customQuestions[index]){
+            if(used.has(bankIndex)) throw new Error('Question '+(index+1)+': This YouGov question is already used in an earlier slot.');
+            used.add(bankIndex);
+          }
+          return bankIndex;
+        });
+        state.customQuestions=customQuestions;
+        state.selectedPolls=selectedPolls;
       } catch(error) {
         return fail(error.message);
       }
