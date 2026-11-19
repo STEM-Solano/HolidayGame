@@ -33,6 +33,10 @@ Active teams start each round at zero. Each team can lock one guess per question
 
 Spectators can watch the scoreboard, reveals, and advancement screens without taking a team slot. The source poll is linked on each reveal.
 
+## Quit or restart
+
+Use **Quit** to return to the home screen on your device. Once a game starts, the host can choose **Start over** to return everyone to the lobby and reset scores, guesses, and advancement. The room code, teams, and saved questions carry over.
+
 ## Source layout
 
 The game rules and API are in `worker/index.js`, the phone and host screens in `worker/page.js`, and the survey question bank in `worker/polls.js`. The server uses the schema in `drizzle/0000_rooms.sql`. A hosted deployment needs a Worker-compatible runtime and a shared D1 database. GitHub holds the source.

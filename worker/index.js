@@ -86,7 +86,7 @@ function view(state, role, team) {
   const finalQuestion = state.round === polls.length - 1;
   const cutoff = lastQuestion ? qualification(state, stageIndex) : null;
   return {
-    role, team: team?.name, eliminated: team?.active === false, round: state.round + 1, phase: state.phase,
+    gameNumber:state.gameNumber??0, role, team: team?.name, eliminated: team?.active === false, round: state.round + 1, phase: state.phase,
     stage: live ? stages[stageIndex] : null, questionNumber: live ? questionNumber : null, questionsPerRound,
     lastQuestion, finalQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
     question: live ? poll[1] : null, slots: live ? poll[4].length : null,
@@ -153,6 +153,19 @@ async function api(request, db, path) {
       const newKey=token();
       state.teams.push({key:newKey,name,score:0,active:true});
       result={key:newKey,code,role:'team'};
+    } else if((host || team) && (body.gameNumber??0)!==(state.gameNumber??0)){
+      return fail('The host restarted the game. Try again from the current screen.',409);
+    } else if(host && body.action==='restart' && state.phase!=='lobby'){
+      state.gameNumber=(state.gameNumber??0)+1;
+      state.round=-1;
+      state.phase='lobby';
+      state.guesses={};
+      delete state.qualified;
+      delete state.winner;
+      for(const team of state.teams){
+        team.score=0;
+        team.active=true;
+      }
     } else if(host && body.action==='saveQuestions' && state.phase==='lobby' && state.version===3){
       try {
         state.customQuestions=parseCustomQuestions(body.questions,polls.length);

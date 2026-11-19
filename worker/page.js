@@ -67,7 +67,8 @@ function render(game){
   if(signature===lastView) return;
   lastView=signature;
   const draft=root.querySelector('#guess-answer');
-  const priorDraft=Number(draft?.dataset.round)===game.round ? draft.value : '';
+  const questionId=(game.gameNumber??0)+'-'+game.round;
+  const priorDraft=draft?.dataset.question===questionId ? draft.value : '';
   const active=draft && document.activeElement===draft;
   const caret=active ? draft.selectionStart : null;
   const host=game.role==='host';
@@ -105,11 +106,14 @@ function render(game){
       if(host) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.active).length+' teams locked in.</p><button id="advance">Reveal results</button>';
       else if(viewer||game.eliminated) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.active).length+' teams locked in. Results appear when the host reveals them.</p>';
       else if(game.submitted) panel+='<p>Guess locked in. The host will reveal the results.</p>';
-      else panel+='<form id="guess"><label for="guess-answer">Your team’s guess</label><input id="guess-answer" name="answer" data-round="'+game.round+'" value="'+esc(priorDraft)+'" maxlength="120" required autocomplete="off"><button>Lock in guess</button></form>';
+      else panel+='<form id="guess"><label for="guess-answer">Your team’s guess</label><input id="guess-answer" name="answer" data-question="'+questionId+'" value="'+esc(priorDraft)+'" maxlength="120" required autocomplete="off"><button>Lock in guess</button></form>';
       panel+='<p><small>'+game.slots+' answers on the board.</small></p>';
     }
   }
-  root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(viewer||host?'Scoreboard':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+(game.phase==='finished'?'<div class="controls"><button class="secondary" id="leave">Back to start</button></div>':'')+'</aside></div>';
+  const roomControls='<div class="controls">'+(host&&game.phase!=='lobby'
+    ? '<button class="secondary" id="restart">Start over</button>' : '')+
+    '<button class="secondary" id="leave">Quit</button></div>';
+  root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(viewer||host?'Scoreboard':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+roomControls+'</aside></div>';
   const canvas=root.querySelector('#join-qr');
   if(canvas)drawJoinCode(canvas);
   if(active && priorDraft!==undefined){
@@ -167,7 +171,7 @@ questionEditor.addEventListener('submit',async event=>{
   busy=true;
   epoch++;
   try{
-    current=await request(endpoint(),{action:'saveQuestions',questions});
+    current=await request(endpoint(),{action:'saveQuestions',gameNumber:current.gameNumber,questions});
     render(current);
     questionEditor.close();
     message('Questions saved.');
@@ -194,8 +198,18 @@ root.addEventListener('click',event=>{
     try{await navigator.clipboard.writeText(link);message('Link copied.');}
     catch{message('Room link: '+link);}
   });
-  if(id==='advance'||id==='advance-ai')void act(async()=>{const game=await request(endpoint(),{action:'advance',fillWithAi:id==='advance-ai',phase:current.phase,round:current.round,picks:[...root.querySelectorAll('[name=pick]:checked')].map(input=>input.value)});current=game;render(game);});
-  if(id==='leave'){if(session.role!=='watch')remember(null);location.href=location.pathname;}
+  if(id==='advance'||id==='advance-ai')void act(async()=>{const game=await request(endpoint(),{action:'advance',gameNumber:current.gameNumber,fillWithAi:id==='advance-ai',phase:current.phase,round:current.round,picks:[...root.querySelectorAll('[name=pick]:checked')].map(input=>input.value)});current=game;render(game);});
+  if(id==='restart' && !busy && confirm('Start over for everyone in this room? Scores and guesses will reset.')){
+    void act(async()=>{
+      current=await request(endpoint(),{action:'restart',gameNumber:current.gameNumber});
+      render(current);
+    });
+  }
+  if(id==='leave' && !busy){
+    if(session.role==='host' && !confirm('Quit hosting and return to the home screen?')) return;
+    if(session.role!=='watch') remember(null);
+    location.href=location.pathname;
+  }
 });
 root.addEventListener('submit',event=>{
   event.preventDefault();
@@ -211,7 +225,7 @@ root.addEventListener('submit',event=>{
     remember(await request('/api/room/'+encodeURIComponent(code),{action:'join',name:values.get('name')}));
   });
   if(event.target.id==='guess')void act(async()=>{
-    const game=await request(endpoint(),{action:'guess',answer:values.get('answer'),round:current.round});
+    const game=await request(endpoint(),{action:'guess',gameNumber:current.gameNumber,answer:values.get('answer'),round:current.round});
     current=game;render(game);
   });
 });
