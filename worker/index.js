@@ -1,4 +1,4 @@
-import {polls} from './polls.js';
+import {legacyPolls,polls} from './polls.js';
 import {page} from './page.js';
 
 const pagesOrigin = 'https://stem-solano.github.io';
@@ -22,8 +22,13 @@ const fail = (message,status=400) => json({error:message},status);
 
 const stages = ['Opening round', 'Semifinal', 'Final face-off'];
 
-function qualification(state) {
-  const limit = [4, 2, 1][Math.floor(state.round / 2)];
+const formats = {
+  2: {polls:legacyPolls, questionsPerRound:2},
+  3: {polls, questionsPerRound:5}
+};
+
+function qualification(state, stageIndex) {
+  const limit = [4, 2, 1][stageIndex];
   const ranked = state.teams.filter(t=>t.active).sort((a,b)=>b.score-a.score);
   const cutoff = ranked[limit-1].score;
   const automatic = ranked.filter(t=>t.score>cutoff);
@@ -32,15 +37,19 @@ function qualification(state) {
 }
 
 function view(state, role, team) {
+  const {polls,questionsPerRound} = formats[state.version];
+  const stageIndex = Math.floor(state.round / questionsPerRound);
+  const questionNumber = state.round % questionsPerRound + 1;
   const poll = polls[state.round];
   const reveal = state.phase === 'reveal';
   const live = state.phase === 'open' || reveal;
-  const lastQuestion = reveal && state.round % 2 === 1;
-  const cutoff = lastQuestion ? qualification(state) : null;
+  const lastQuestion = reveal && questionNumber === questionsPerRound;
+  const finalQuestion = state.round === polls.length - 1;
+  const cutoff = lastQuestion ? qualification(state, stageIndex) : null;
   return {
     role, team: team?.name, eliminated: team?.active === false, round: state.round + 1, phase: state.phase,
-    stage: live ? stages[Math.floor(state.round / 2)] : null, questionNumber: live ? state.round % 2 + 1 : null,
-    lastQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
+    stage: live ? stages[stageIndex] : null, questionNumber: live ? questionNumber : null, questionsPerRound,
+    lastQuestion, finalQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
     question: live ? poll[1] : null, slots: live ? poll[4].length : null,
     source: reveal ? 'https://yougov.com/en-us/' + poll[2] : null,
     year: reveal ? poll[3] : null, board: reveal ? poll[4].map(([answer,points])=>({answer,points})) : [],
@@ -60,7 +69,7 @@ async function api(request, db, path) {
     for (let attempt=0; attempt<5; attempt++) {
       const number = crypto.getRandomValues(new Uint32Array(1))[0];
       const code = (number % 2176782336).toString(36).toUpperCase().padStart(6,'0');
-      const state = {version:2,round:-1,phase:'lobby',teams:[],guesses:{}};
+      const state = {version:3,round:-1,phase:'lobby',teams:[],guesses:{}};
       const result = await db.prepare('INSERT OR IGNORE INTO rooms (code,host,created,state) VALUES (?,?,?,?)')
         .bind(code,host,Date.now(),JSON.stringify(state)).run();
       if(result.meta.changes) return json({code,key:host,role:'host'});
@@ -76,7 +85,8 @@ async function api(request, db, path) {
     const row=await db.prepare('SELECT * FROM rooms WHERE code=? AND created>=?').bind(code,Date.now()-ttl).first();
     if(!row) return fail('Room not found or expired. Check the code with your host.',404);
     const state=JSON.parse(row.state);
-    if(state.version!==2) return fail('This room used an earlier format. Create a new room.',404);
+    if(!Object.hasOwn(formats,state.version)) return fail('This room used an earlier format. Create a new room.',404);
+    const {polls,questionsPerRound}=formats[state.version];
     const host=key===row.host;
     const team=state.teams.find(t=>t.key===key);
     if(request.method==='GET') {
@@ -118,8 +128,8 @@ async function api(request, db, path) {
           guess.points=answer?.[1] ?? 0;
           t.score+=guess.points;
         }
-      } else if(state.phase==='reveal' && state.round%2===1){
-        const {automatic,tied,slots}=qualification(state);
+      } else if(state.phase==='reveal' && (state.round+1)%questionsPerRound===0){
+        const {automatic,tied,slots}=qualification(state, Math.floor(state.round / questionsPerRound));
         const picks = Array.isArray(body.picks) ? [...new Set(body.picks)] : [];
         if(tied.length>slots && (picks.length!==slots || picks.some(name=>!tied.some(t=>t.name===name)))){
           return fail('Select '+slots+' tied team(s) before confirming.');

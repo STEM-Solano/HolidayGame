@@ -1302,7 +1302,7 @@ async function request(path,body,key=session?.key){
   return data;
 }
 function home(){
-  root.innerHTML='<div class="tag">Survey guessing game</div><h1>Guess what<br>the crowd said.</h1><p>Guess the most popular answers from published YouGov polls. Six teams start. Four advance to the semifinal, then two face off in the final.</p><div class="grid"><section class="card highlight"><h2>Join a game</h2><form id="join"><label for="code">Room code</label><input id="code" name="code" value="'+esc(urlCode)+'" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters"><label for="name">Team name</label><input id="name" name="name" maxlength="26" required autocomplete="off"><button>Join team</button> <button type="submit" name="mode" value="watch" formnovalidate class="secondary">Watch live</button></form></section><section class="card"><h2>Host a game</h2><p>Share the room link, then open and reveal each round. You can project this screen for everyone.</p><button id="create">Create room</button></section></div>';
+  root.innerHTML='<div class="tag">Survey guessing game</div><h1>Guess what<br>the crowd said.</h1><p>Guess the most popular answers from published YouGov polls. Each round has five questions. Six teams start. Four advance to the semifinal, then two face off in the final.</p><div class="grid"><section class="card highlight"><h2>Join a game</h2><form id="join"><label for="code">Room code</label><input id="code" name="code" value="'+esc(urlCode)+'" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters"><label for="name">Team name</label><input id="name" name="name" maxlength="26" required autocomplete="off"><button>Join team</button> <button type="submit" name="mode" value="watch" formnovalidate class="secondary">Watch live</button></form></section><section class="card"><h2>Host a game</h2><p>Share the room link, then open and reveal each round. You can project this screen for everyone.</p><button id="create">Create room</button></section></div>';
 }
 function roomLink(watch=false){
   const link=new URL(location.pathname,location.origin);
@@ -1353,7 +1353,7 @@ function render(game){
     panel='<div class="tag">Champion</div><h1 class="question">'+esc(game.winner)+'</h1><p>'+teams.find(t=>t.name===game.winner).score+' points in the final face-off.</p>';
   } else {
     const revealed=game.phase==='reveal';
-    panel='<div class="tag">'+esc(game.stage)+' · Question '+game.questionNumber+' of 2</div><h1 class="question">'+esc(game.question)+'</h1>';
+    panel='<div class="tag">'+esc(game.stage)+' · Question '+game.questionNumber+' of '+(game.questionsPerRound??2)+'</div><h1 class="question">'+esc(game.question)+'</h1>';
     if(revealed){
       panel+=game.board.map((a,i)=>'<div class="answer"><span>'+(i+1)+'. '+esc(a.answer)+'</span><em>'+a.points+'</em></div>').join('');
       panel+='<p><a href="'+esc(game.source)+'" target="_blank" rel="noopener noreferrer">YouGov poll · '+game.year+'</a></p>';
@@ -1361,7 +1361,7 @@ function render(game){
         if(game.lastQuestion && game.tiebreak){
           panel+='<p>Tie at the cutoff. Select '+game.tiebreak.slots+' tied team(s) after your tiebreaker.</p>'+game.tiebreak.names.map(name=>'<label class="tie"><input type="checkbox" name="pick" value="'+esc(name)+'"> '+esc(name)+'</label>').join('');
         }
-        panel+='<div class="controls"><button id="advance">'+(!game.lastQuestion?'Next question':game.round===6?'Crown champion':'Show advancing teams')+'</button></div>';
+        panel+='<div class="controls"><button id="advance">'+(!game.lastQuestion?'Next question':(game.finalQuestion??game.round===6)?'Crown champion':'Show advancing teams')+'</button></div>';
       }
     }else{
       if(host) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.active).length+' teams locked in.</p><button id="advance">Reveal results</button>';

@@ -19,9 +19,9 @@ AI teams automatically lock one randomly selected survey answer per question. Th
 
 ## Game format
 
-- Opening round: six teams answer two questions. Four advance.
-- Semifinal: four teams answer two questions. Two advance.
-- Face-off: two teams answer two questions. The higher score wins.
+- Opening round: six teams answer five questions. Four advance.
+- Semifinal: four teams answer five questions. Two advance.
+- Face-off: two teams answer five questions. The higher score wins.
 
 Active teams start each round at zero. Each team can lock one guess per question. Matching answers earn the corresponding published survey percentage as points. The host reveals each answer board, confirms who advances, and starts the next round. For a tie at the cutoff, the host runs a tiebreaker and selects the winning team or teams on the host screen.
 
