@@ -149,11 +149,9 @@ function editQuestions(game){
     const heading=index%count===0?'<h3>'+stages[Math.floor(index/count)]+'</h3>':'';
     const selected=question.prompt?'custom':String(question.bankIndex??index);
     const currentChoice=game.questionBank?.[Number(selected)];
-    const options=(game.questionBank??[]).map(({title},bankIndex)=>
-      '<option value="'+bankIndex+'"'+(String(bankIndex)===selected?' selected':'')+'>'+esc(title)+'</option>').join('');
     const picker=game.questionBank
       ? '<label for="bank-'+index+'">Question source</label><select id="bank-'+index+'" name="bank">'+
-        '<option value="custom"'+(selected==='custom'?' selected':'')+'>Write a custom question</option>'+options+'</select>'
+        '<option value="'+selected+'"></option></select>'
       : '';
     return heading+'<details><summary>Question '+(index%count+1)+' · <span>'+esc(currentChoice?.title??(question.prompt?'Custom':'Built-in'))+'</span></summary>'+
       picker+'<p class="bank-prompt"'+(selected==='custom'?' hidden':'')+'>'+esc(currentChoice?.prompt??question.defaultPrompt)+'</p>'+
@@ -165,34 +163,65 @@ function editQuestions(game){
     ? 'Choose five questions for each round from the '+game.questionBank.length+' YouGov questions, or write your own. Use each YouGov question once.'
     : 'Leave both fields blank to use the built-in question.';
   questionEditor.innerHTML='<h2 id="question-editor-title">Edit questions</h2><p>'+instructions+'</p><p>For custom questions, enter 2 to 10 answers, one per line. Use <strong>Answer | Points | Alternate spelling</strong>. Points must be whole numbers from 1 to 100.</p><form>'+slots+'<div class="controls"><p role="status"></p><button>Save questions</button><button type="button" class="secondary" id="close-editor">Cancel</button></div></form>';
+  if(game.questionBank) updateQuestionOptions(game.questionBank);
   questionEditor.scrollTop=0;
   questionEditor.showModal();
 }
 questionEditor.addEventListener('click',event=>{
   if(event.target.id==='close-editor') questionEditor.close();
 });
+function updateQuestionOptions(bank){
+  const used=new Set();
+  let cleared=false;
+  for(const picker of questionEditor.querySelectorAll('select[name=bank]')){
+    let selected=picker.value;
+    if(used.has(selected)){
+      selected='';
+      cleared=true;
+    }
+    const options=bank.map(({title},index)=>{
+      const value=String(index);
+      return used.has(value)?'':'<option value="'+value+'">'+esc(title)+'</option>';
+    }).join('');
+    picker.innerHTML='<option value="" disabled>Choose a question</option>'+
+      '<option value="custom">Write a custom question</option>'+options;
+    picker.value=selected;
+    const choice=selected===''?null:bank[Number(selected)];
+    if(choice) used.add(selected);
+    const slot=picker.closest('details');
+    const prompt=slot.querySelector('.bank-prompt');
+    prompt.hidden=!choice;
+    prompt.textContent=choice?.prompt??'';
+    slot.querySelector('.custom-fields').hidden=selected!=='custom';
+    slot.querySelector('summary span').textContent=choice?.title??(selected==='custom'?'Custom':'Choose a question');
+  }
+  questionEditor.querySelector('[role=status]').textContent=cleared
+    ? 'An earlier slot now uses that question. Choose a replacement for the cleared slot.'
+    : '';
+}
 questionEditor.addEventListener('change',event=>{
-  if(event.target.name!=='bank') return;
-  const details=event.target.closest('details');
-  const choice=current.questionBank[Number(event.target.value)];
-  const prompt=details.querySelector('.bank-prompt');
-  prompt.hidden=!choice;
-  prompt.textContent=choice?.prompt??'';
-  details.querySelector('.custom-fields').hidden=!!choice;
-  details.querySelector('summary span').textContent=choice?.title??'Custom';
+  if(event.target.name==='bank') updateQuestionOptions(current.questionBank);
 });
 questionEditor.addEventListener('submit',async event=>{
   event.preventDefault();
   if(busy) return;
   const form=new FormData(event.target);
   const answers=form.getAll('answers');
-  const bankChoices=form.getAll('bank');
+  const bankChoices=[...event.target.querySelectorAll('select[name=bank]')].map(picker=>picker.value);
+  const emptySlot=bankChoices.indexOf('');
+  const status=questionEditor.querySelector('[role=status]');
+  if(emptySlot!==-1){
+    const picker=questionEditor.querySelector('#bank-'+emptySlot);
+    picker.closest('details').open=true;
+    picker.focus();
+    status.textContent='Choose a question for every slot before saving.';
+    return;
+  }
   const questions=form.getAll('prompt').map((prompt,index)=>{
     const choice=bankChoices[index];
     if(choice && choice!=='custom') return {bankIndex:Number(choice),prompt:'',answers:''};
     return {bankIndex:choice==='custom'?null:undefined,prompt,answers:answers[index]};
   });
-  const status=questionEditor.querySelector('[role=status]');
   const button=questionEditor.querySelector('button');
   status.textContent='';
   button.disabled=true;
