@@ -75,7 +75,11 @@ function render(game){
   const host=game.role==='host';
   const viewer=game.role==='watch';
   const teams=[...game.teams].sort((a,b)=>Number(b.active)-Number(a.active)||(b.tieScore??b.score??0)-(a.tieScore??a.score??0));
-  const teamList=teams.map(t=>'<div class="team"><div><strong>'+esc(t.name)+'</strong>'+(t.ai?' <small>· AI</small>':'')+(!t.active?' <small>· eliminated</small>':'')+(game.phase==='open'&&t.submitted?' <small>· locked in</small>':'')+(game.phase==='reveal'&&t.guess?'<br><small>'+esc(t.guess)+' · +'+t.points+'</small>':'')+'</div>'+(t.score===undefined?'':'<span class="points">'+t.score+(t.tieScore===undefined?'':' <small>· '+t.tieScore+' tiebreak</small>')+'</span>')+'</div>').join('');
+  const scoreRounds=game.scoreRounds??[];
+  const roundScoreDetails=team=>scoreRounds.length
+    ? '<br><small>'+scoreRounds.map((round,index)=>esc(round)+' '+(team.roundScores?.[index]??'—')).join(' · ')+'</small>'
+    : '';
+  const teamList=teams.map(t=>'<div class="team"><div><strong>'+esc(t.name)+'</strong>'+(t.ai?' <small>· AI</small>':'')+(!t.active?' <small>· eliminated</small>':'')+(game.phase==='open'&&t.submitted?' <small>· locked in</small>':'')+(game.phase==='reveal'&&t.guess?'<br><small>'+esc(t.guess)+' · +'+t.points+'</small>':'')+roundScoreDetails(t)+'</div>'+(t.score===undefined?'':'<span class="points">'+t.score+(scoreRounds.length?' <small>total</small>':'')+(t.tieScore===undefined?'':' <small>· '+t.tieScore+' tiebreak</small>')+'</span>')+'</div>').join('');
   let panel='';
   if(game.phase==='lobby'){
     const emptySlots=6-teams.length;

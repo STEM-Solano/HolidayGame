@@ -108,6 +108,13 @@ function startTiebreak(state, cutoff) {
 function openQuestion(state, polls) {
   state.phase='open';
   state.guesses={};
+  const stageIndex=Math.floor(state.round/questionCount(state));
+  if(state.version===4 && !state.tie && state.round%questionCount(state)===0){
+    for(const team of state.teams.filter(t=>t.active)){
+      team.roundScores??=[];
+      team.roundScores[stageIndex]=0;
+    }
+  }
   const poll=questionAt(state,polls);
   const options=state.version===4 ? choicesFor(poll) : poll[4].map(([label])=>label);
   for(const team of state.teams.filter(t=>t.ai && eligible(state,t))){
@@ -154,6 +161,7 @@ function view(state, role, team) {
   return {
     gameNumber:state.gameNumber??0, role, team: team?.name, eliminated: team?.active === false, round: questionToken(state), phase: state.phase,
     stage: live ? stages[stageIndex] : null, questionNumber: live ? questionNumber : null, questionsPerRound,
+    ...(dropdown && role==='host' ? {scoreRounds:stages.slice(0,stageIndex+1)} : {}),
     dropdown, tieActive:!!state.tie, canGuess:!!canGuess,
     choices:dropdown && canGuess && state.phase==='open' ? choicesFor(poll) : [],
     lastQuestion, finalQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
@@ -177,7 +185,7 @@ function view(state, role, team) {
     whatIfPicks:whatIf ? team.whatIfPicks??[] : undefined,
     submitted: whatIf ? team.whatIfPicks?.at(-1)?.questionToken===questionToken(state) : team && Object.hasOwn(state.guesses,team.key),
     teams: state.teams.map(t=>({
-      name:t.name, ai:t.ai === true, ...(showScores ? {score:t.score,...(state.tie && eligible(state,t) ? {tieScore:state.tie.scores[t.key]} : {})} : {}), active:t.active, eligible:eligible(state,t), submitted:Object.hasOwn(state.guesses,t.key),
+      name:t.name, ai:t.ai === true, ...(showScores ? {score:t.score,...(dropdown ? {roundScores:t.roundScores??[]} : {}),...(state.tie && eligible(state,t) ? {tieScore:state.tie.scores[t.key]} : {})} : {}), active:t.active, eligible:eligible(state,t), submitted:Object.hasOwn(state.guesses,t.key),
       ...(showBoard && t.active ? {guess:state.guesses[t.key]?.text, points:state.guesses[t.key]?.points ?? 0} : {})
     }))
   };
@@ -239,6 +247,7 @@ async function api(request, db, path) {
       delete state.tieSequence;
       for(const team of state.teams){
         delete team.whatIfPicks;
+        delete team.roundScores;
         team.score=0;
         team.active=true;
       }
@@ -314,7 +323,11 @@ async function api(request, db, path) {
           }));
           guess.points=answer?.[1] ?? 0;
           if(state.tie) state.tie.scores[t.key]+=guess.points;
-          else t.score+=guess.points;
+          else {
+            t.score+=guess.points;
+            const stageIndex=Math.floor(state.round/questionsPerRound);
+            if(t.roundScores?.[stageIndex]!=null) t.roundScores[stageIndex]+=guess.points;
+          }
         }
       } else if(state.phase==='reveal' && (state.round+1)%questionsPerRound===0){
         const cutoff=qualification(state, Math.floor(state.round / questionsPerRound));
