@@ -154,14 +154,14 @@ function view(state, role, team) {
   const finalQuestion = state.round === questionsPerRound*3 - 1;
   const dropdown=state.version===4;
   const showBoard=reveal && (!dropdown || role==='host');
-  const showScores=!dropdown || role==='host';
+  const showScores=!dropdown || role==='host' || role==='team';
   const whatIf=dropdown && team?.active===false;
   const canGuess=team && (eligible(state,team) || whatIf);
   const cutoff = lastQuestion ? qualification(state, stageIndex) : null;
   return {
     gameNumber:state.gameNumber??0, role, team: team?.name, eliminated: team?.active === false, round: questionToken(state), phase: state.phase,
     stage: live ? stages[stageIndex] : null, questionNumber: live ? questionNumber : null, questionsPerRound,
-    ...(dropdown && role==='host' ? {scoreRounds:stages.slice(0,stageIndex+1)} : {}),
+    ...(dropdown && showScores ? {scoreRounds:stages.slice(0,stageIndex+1)} : {}),
     dropdown, tieActive:!!state.tie, canGuess:!!canGuess,
     choices:dropdown && canGuess && state.phase==='open' ? choicesFor(poll) : [],
     lastQuestion, finalQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
