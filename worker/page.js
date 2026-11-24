@@ -130,7 +130,7 @@ function render(game){
   const roomControls='<div class="controls">'+(host&&game.phase!=='lobby'
     ? '<button class="secondary" id="restart">Start over</button>' : '')+
     '<button class="secondary" id="leave">Quit</button></div>';
-  root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(host||viewer&&!game.dropdown?'Scoreboard':viewer?'Teams':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+roomControls+'</aside></div>';
+  root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(host||game.scoreRounds||viewer&&!game.dropdown?'Scoreboard':viewer?'Teams':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+roomControls+'</aside></div>';
   const canvas=root.querySelector('#join-qr');
   if(canvas)drawJoinCode(canvas);
   if(active && priorDraft!==undefined){
