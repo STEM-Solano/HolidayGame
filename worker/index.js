@@ -1,4 +1,4 @@
-import {legacyPolls,polls,questionBank} from './polls.js';
+import {legacyPolls,polls,questionBank,updatedQuestionBank} from './polls.js';
 import {distractors} from './distractors.js';
 import {page} from './page.js';
 
@@ -26,7 +26,8 @@ const stages = ['Opening round', 'Semifinal', 'Final face-off'];
 const formats = {
   2: {polls:legacyPolls, questionsPerRound:2},
   3: {polls, questionsPerRound:5},
-  4: {polls:questionBank, questionsPerRound:5}
+  4: {polls:questionBank, questionsPerRound:5},
+  5: {polls:updatedQuestionBank, questionsPerRound:5}
 };
 
 function parseCustomQuestions(questions, count, dropdown) {
@@ -74,10 +75,15 @@ function parseCustomQuestions(questions, count, dropdown) {
   });
 }
 
+const bankFor = state => state.version>=5 ? updatedQuestionBank : questionBank;
+// The last 14 entries in the updated bank are available through manual selection.
+const automaticBankFor = state => bankFor(state).slice(0,questionBank.length);
+
 function questionAt(state, polls) {
-  if(state.tie) return questionBank[state.tie.bankIndex];
+  const bank=bankFor(state);
+  if(state.tie) return bank[state.tie.bankIndex];
   return state.customQuestions?.[state.round] ??
-    questionBank[state.selectedPolls?.[state.round]] ?? polls[state.round];
+    bank[state.selectedPolls?.[state.round]] ?? polls[state.round];
 }
 
 function choicesFor(poll) {
@@ -93,7 +99,7 @@ function startTiebreak(state, cutoff) {
   const count=questionCount(state)*3;
   const used=new Set(Array.from({length:count},(_,index)=>
     state.customQuestions?.[index] ? null : state.selectedPolls?.[index]??index));
-  const available=questionBank.map((_,index)=>index).filter(index=>!used.has(index));
+  const available=automaticBankFor(state).map((_,index)=>index).filter(index=>!used.has(index));
   const sequence=(state.tieSequence??0)+1;
   state.tieSequence=sequence;
   state.tie={
@@ -109,14 +115,14 @@ function openQuestion(state, polls) {
   state.phase='open';
   state.guesses={};
   const stageIndex=Math.floor(state.round/questionCount(state));
-  if(state.version===4 && !state.tie && state.round%questionCount(state)===0){
+  if(state.version>=4 && !state.tie && state.round%questionCount(state)===0){
     for(const team of state.teams.filter(t=>t.active)){
       team.roundScores??=[];
       team.roundScores[stageIndex]=0;
     }
   }
   const poll=questionAt(state,polls);
-  const options=state.version===4 ? choicesFor(poll) : poll[4].map(([label])=>label);
+  const options=state.version>=4 ? choicesFor(poll) : poll[4].map(([label])=>label);
   for(const team of state.teams.filter(t=>t.ai && eligible(state,t))){
     state.guesses[team.key]={text:options[Math.floor(Math.random()*options.length)]};
   }
@@ -152,7 +158,7 @@ function view(state, role, team) {
   const live = state.phase === 'open' || reveal;
   const lastQuestion = reveal && questionNumber === questionsPerRound;
   const finalQuestion = state.round === questionsPerRound*3 - 1;
-  const dropdown=state.version===4;
+  const dropdown=state.version>=4;
   const showBoard=reveal && (!dropdown || role==='host');
   const showScores=!dropdown || role==='host' || role==='team';
   const whatIf=dropdown && team?.active===false;
@@ -166,11 +172,11 @@ function view(state, role, team) {
     choices:dropdown && canGuess && state.phase==='open' ? choicesFor(poll) : [],
     lastQuestion, finalQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
     question: live ? poll[1] : null, slots: live && (!dropdown || role==='host') ? poll[4].length : null,
-    source: showBoard && poll[2] ? 'https://yougov.com/en-us/' + poll[2] : null,
+    source: showBoard && poll[2] ? (poll[2].startsWith('https://') ? poll[2] : 'https://yougov.com/en-us/' + poll[2]) : null,
     year: showBoard ? poll[3] : null, board: showBoard ? poll[4].map(([answer,points])=>({answer,points})) : [],
     tiebreak: role==='host' && cutoff && cutoff.tied.length>cutoff.slots ? {names:cutoff.tied.map(t=>t.name),slots:cutoff.slots} : null,
     ...(role==='host' && state.phase==='lobby' && state.version>=3 ? {
-      questionBank:questionBank.map(([title,prompt])=>({title,prompt})),
+      questionBank:bankFor(state).map(([title,prompt])=>({title,prompt})),
       questionSetup: polls.slice(0,questionsPerRound*3).map((poll,index)=>{
         const custom=state.customQuestions?.[index];
         return {
@@ -198,7 +204,7 @@ async function api(request, db, path) {
     for (let attempt=0; attempt<5; attempt++) {
       const number = crypto.getRandomValues(new Uint32Array(1))[0];
       const code = (number % 2176782336).toString(36).toUpperCase().padStart(6,'0');
-      const state = {version:4,round:-1,phase:'lobby',teams:[],guesses:{}};
+      const state = {version:5,round:-1,phase:'lobby',teams:[],guesses:{}};
       const result = await db.prepare('INSERT OR IGNORE INTO rooms (code,host,created,state) VALUES (?,?,?,?)')
         .bind(code,host,Date.now(),JSON.stringify(state)).run();
       if(result.meta.changes) return json({code,key:host,role:'host'});
@@ -251,7 +257,7 @@ async function api(request, db, path) {
         team.score=0;
         team.active=true;
       }
-    } else if(host && body.action==='setQuestionCount' && state.phase==='lobby' && state.version===4){
+    } else if(host && body.action==='setQuestionCount' && state.phase==='lobby' && state.version>=4){
       const count=body.count;
       if(!Number.isInteger(count) || count<1 || count>10) return fail('Choose 1 to 10 questions per round.');
       if(state.selectedPolls && count!==questionsPerRound){
@@ -269,7 +275,7 @@ async function api(request, db, path) {
         }
         for(let index=0;index<count*3;index++){
           if(selectedPolls[index]!==undefined) continue;
-          const next=questionBank.findIndex((_,bankIndex)=>!used.has(bankIndex));
+          const next=automaticBankFor(state).findIndex((_,bankIndex)=>!used.has(bankIndex));
           selectedPolls[index]=next;
           used.add(next);
         }
@@ -279,11 +285,11 @@ async function api(request, db, path) {
       state.questionsPerRound=count;
     } else if(host && body.action==='saveQuestions' && state.phase==='lobby' && state.version>=3){
       try {
-        const customQuestions=parseCustomQuestions(body.questions,questionsPerRound*3,state.version===4);
+        const customQuestions=parseCustomQuestions(body.questions,questionsPerRound*3,state.version>=4);
         const used=new Set();
         const selectedPolls=body.questions.map((entry,index)=>{
           const bankIndex=entry.bankIndex??state.selectedPolls?.[index]??index;
-          if(!Number.isInteger(bankIndex) || bankIndex<0 || bankIndex>=questionBank.length){
+          if(!Number.isInteger(bankIndex) || bankIndex<0 || bankIndex>=bankFor(state).length){
             throw new Error('Question '+(index+1)+': Choose a question from the bank.');
           }
           if(entry.bankIndex===null && !customQuestions[index]){
@@ -316,7 +322,7 @@ async function api(request, db, path) {
         for(const t of state.teams){
           const guess=state.guesses[t.key];
           if(!guess) continue;
-          const answer=state.version===4 ? answers.find(([label])=>label===guess.text) : answers.find(([label,,...aliases])=>[label,...aliases].some(alias=>{
+          const answer=state.version>=4 ? answers.find(([label])=>label===guess.text) : answers.find(([label,,...aliases])=>[label,...aliases].some(alias=>{
             const value=normalize(alias);
             const input=normalize(guess.text);
             return value===input || value+'s'===input || value===input+'s';
@@ -332,7 +338,7 @@ async function api(request, db, path) {
       } else if(state.phase==='reveal' && (state.round+1)%questionsPerRound===0){
         const cutoff=qualification(state, Math.floor(state.round / questionsPerRound));
         const {automatic,tied,slots}=cutoff;
-        if(state.version===4 && tied.length>slots){
+        if(state.version>=4 && tied.length>slots){
           startTiebreak(state,cutoff);
           openQuestion(state,polls);
         } else {
@@ -352,15 +358,15 @@ async function api(request, db, path) {
           }
         }
       } else if(['lobby','reveal','advancement'].includes(state.phase)){
-        if(state.version!==4 && state.phase==='advancement') state.teams.filter(t=>t.active).forEach(t=>{t.score=0;});
+        if(state.version<4 && state.phase==='advancement') state.teams.filter(t=>t.active).forEach(t=>{t.score=0;});
         state.round++;
         openQuestion(state,polls);
       } else return fail('The game has ended.');
-    } else if(team && !team.ai && (eligible(state,team) || (state.version===4 && !team.active)) && body.action==='guess'){
+    } else if(team && !team.ai && (eligible(state,team) || (state.version>=4 && !team.active)) && body.action==='guess'){
       const answer=clean(body.answer);
       if(state.phase!=='open'||body.round!==questionToken(state)) return fail('This round is closed.');
       if(!answer) return fail('Enter one guess.');
-      if(state.version===4 && !choicesFor(questionAt(state,polls)).includes(answer)) return fail('Select an answer from the list.');
+      if(state.version>=4 && !choicesFor(questionAt(state,polls)).includes(answer)) return fail('Select an answer from the list.');
       if(!team.active){
         team.whatIfPicks??=[];
         const question=questionAt(state,polls)[1];

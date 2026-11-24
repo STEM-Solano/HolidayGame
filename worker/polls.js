@@ -66,3 +66,26 @@ export const questionBank = [
  ["More movies, please","Name a film genre that over 40% of U.S. respondents wanted Hollywood to make more of.","articles/50213-superhero-fatigue-and-reboot-resistance-among-americans",2024,[["Comedy",57,"comedies"],["Crime films",49,"crime","thrillers"],["Historical drama",48,"historical dramas"],["Action",46,"action films"],["Documentaries or biopics",45,"documentary","documentaries","biopic","biopics"],["Science fiction",43,"sci fi","scifi"]]],
  ["Potato preparations","Name a preparation Americans picked as their favorite way to eat potatoes.","daily-results/20190819-9d8d8-3",2019,[["French fries",26,"fries"],["Baked potatoes",18,"baked potato"],["Mashed potatoes",18,"mashed potato","mash"],["Roasted potatoes",9,"roast potatoes"],["Hash browns",6,"hashbrowns"],["Tater tots",5],["Potato chips",5,"chips"],["Potato salad",5],["Latkes",2,"potato pancake"]]]
 ];
+
+// Keep the previous bank available by index for rooms already in progress.
+const replacementPolls = {
+  0: ["Christmas cookies","Name a treat that won at least 61% of its head-to-head Christmas cookie matchups.","articles/33441-most-and-least-popular-christmas-cookies",2020,[["Chocolate chip",78],["Sugar cookies",64],["Fudge",63],["Brookies",61],["Double chocolate",61],["M&M cookies",61],["Shortbread",61]],["Gingerbread","Gingersnaps","Snickerdoodles"]],
+  1: ["Holiday drinks","Name one of the four drinks most often picked as a holiday favorite.","articles/44840-hot-chocolate-americans-favorite-holiday-beverage",2022,[["Hot chocolate",28],["Eggnog",12],["Tea",9],["Wine",9]],["Apple cider","Coffee","Hot toddy"]],
+  2: ["Candy rankings","Name a candy with at least 60% popularity in YouGov’s Q3 2026 candy rankings.","ratings/candies",2026,[["Peanut M&M’s",80],["Godiva",68],["Gummi Bears",66],["Jolly Ranchers",65],["Mentos",62]],["Milka","Red Vines","Toblerone"]],
+  4: ["First snowfall","Name a feeling Americans reported on seeing the first snow of the season.","daily-results/20221202-094e9-3",2022,[["Excited",35],["Happy",29],["Cold",24],["Surprised",14],["Indifferent",13],["Angry",7],["Sad",7],["Disappointed",7]],["Nostalgic","Proud","Embarrassed"]],
+  5: ["Thanksgiving leftovers","Name how long Americans expected to eat Thanksgiving leftovers.","daily-results/20191129-8b459-1",2019,[["2–3 days",47],["1 day",23],["0 days",15],["4–5 days",8],["More than a week",2],["6–7 days",1]],["Depends on the dish","Only if someone else cooks"]],
+  6: ["Christmas tree plans","What sort of Christmas tree did Americans plan to have at home in 2024, if any?","daily-results/20241218-61c3e-1",2024,[["Artificial tree",53],["No tree",28],["Real tree",15]],["Both a real and an artificial tree","An outdoor tree only"]],
+  7: ["Gift wrap habits","How did Americans say they handle wrapping paper after opening gifts?","daily-results/20251215-6ee37-4",2025,[["Never keep it",59],["Keep it and reuse it",18],["Keep it but rarely reuse it",16]],["Always give it back to the giver","Keep only paper from birthdays"]],
+  8: ["Gift wrapping skills","How did Americans rate their gift-wrapping skills?","daily-results/20251215-6ee37-3",2025,[["Somewhat good",38],["Very good",23],["Somewhat bad",19],["Very bad",15],["Unsure",5]],["Average","Depends on the shape"]],
+  9: ["Opening presents","Name a time Americans said their family opens most Christmas presents.","daily-results/20241224-ca65c-1",2024,[["Christmas morning",43],["Christmas Eve",23],["Christmas afternoon or evening",10],["Before Christmas Eve",6],["After Christmas Day",5]],["As each gift arrives","At different times for each family member"]],
+  10: ["Gift shopping calendar","Name when Americans planned to start their 2025 holiday gift shopping.","daily-results/20251015-56e80-1",2025,[["November",36],["October",13],["December",13],["Before October",9]],["Only after the holidays","No specific start month"]],
+  11: ["Gift shopping budget","Name a spending range Americans planned for holiday gifts in 2025.","daily-results/20251015-56e80-3",2025,[["$250–$499",21],["$100–$249",17],["$500–$1,000",17],["Under $100",9],["Over $1,000",8]],["No spending limit","Budget per person only"]],
+  12: ["Snow where you live","How often did Americans say it snows in winter where they live?","daily-results/20241220-2fc36-3",2024,[["Sometimes",26],["Rarely",22],["Usually",21],["Never",16],["Always",12]],["Only in leap years","Only when they travel"]],
+  13: ["Outdoor winter fun","Name an outdoor winter activity U.S. adults planned to do or had done in the 2022 holiday poll.","https://docs.cdn.yougov.com/j412hx5zyh/poll_Winter_Holidays_and_Santa_Claus_December_6_12_2022.pdf",2022,[["Build a snowman",21],["Make a snow angel",20],["Go sledding",17],["Take a hayride or sleigh ride",15],["Go ice skating",14]],["Go snowshoeing","Play ice hockey","Go skiing"]],
+  14: ["Trick-or-treat giveaways","Name something Americans said they usually hand out to trick-or-treaters.","daily-results/20261030-2f60d-2",2026,[["Candy",53],["Other food or snacks",9],["Toys",5]],["Cash","Stickers","Glow sticks"]]
+};
+
+export const updatedQuestionBank = [
+  ...questionBank.map((poll,index)=>replacementPolls[index]??poll),
+  ...questionBank.filter((_,index)=>Object.hasOwn(replacementPolls,index))
+];
