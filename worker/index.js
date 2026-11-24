@@ -148,7 +148,8 @@ function view(state, role, team) {
   const dropdown=state.version===4;
   const showBoard=reveal && (!dropdown || role==='host');
   const showScores=!dropdown || role==='host';
-  const canGuess=team && eligible(state,team);
+  const whatIf=dropdown && team?.active===false;
+  const canGuess=team && (eligible(state,team) || whatIf);
   const cutoff = lastQuestion ? qualification(state, stageIndex) : null;
   return {
     gameNumber:state.gameNumber??0, role, team: team?.name, eliminated: team?.active === false, round: questionToken(state), phase: state.phase,
@@ -173,7 +174,8 @@ function view(state, role, team) {
         };
       })
     } : {}),
-    submitted: team && Object.hasOwn(state.guesses,team.key),
+    whatIfPicks:whatIf ? team.whatIfPicks??[] : undefined,
+    submitted: whatIf ? team.whatIfPicks?.at(-1)?.questionToken===questionToken(state) : team && Object.hasOwn(state.guesses,team.key),
     teams: state.teams.map(t=>({
       name:t.name, ai:t.ai === true, ...(showScores ? {score:t.score,...(state.tie && eligible(state,t) ? {tieScore:state.tie.scores[t.key]} : {})} : {}), active:t.active, eligible:eligible(state,t), submitted:Object.hasOwn(state.guesses,t.key),
       ...(showBoard && t.active ? {guess:state.guesses[t.key]?.text, points:state.guesses[t.key]?.points ?? 0} : {})
@@ -236,6 +238,7 @@ async function api(request, db, path) {
       delete state.tie;
       delete state.tieSequence;
       for(const team of state.teams){
+        delete team.whatIfPicks;
         team.score=0;
         team.active=true;
       }
@@ -340,13 +343,19 @@ async function api(request, db, path) {
         state.round++;
         openQuestion(state,polls);
       } else return fail('The game has ended.');
-    } else if(team && eligible(state,team) && !team.ai && body.action==='guess'){
+    } else if(team && !team.ai && (eligible(state,team) || (state.version===4 && !team.active)) && body.action==='guess'){
       const answer=clean(body.answer);
       if(state.phase!=='open'||body.round!==questionToken(state)) return fail('This round is closed.');
       if(!answer) return fail('Enter one guess.');
       if(state.version===4 && !choicesFor(questionAt(state,polls)).includes(answer)) return fail('Select an answer from the list.');
-      if(Object.hasOwn(state.guesses,team.key)) return json(view(state,'team',team));
-      state.guesses[team.key]={text:answer};
+      if(!team.active){
+        team.whatIfPicks??=[];
+        const question=questionAt(state,polls)[1];
+        const token=questionToken(state);
+        if(team.whatIfPicks.at(-1)?.questionToken===token) return json(view(state,'team',team));
+        team.whatIfPicks.push({questionToken:token,question,answer});
+      } else if(Object.hasOwn(state.guesses,team.key)) return json(view(state,'team',team));
+      else state.guesses[team.key]={text:answer};
     } else return fail('That action is unavailable.',409);
     const saved=await db.prepare('UPDATE rooms SET state=?,revision=revision+1 WHERE code=? AND revision=?')
       .bind(JSON.stringify(state),code,row.revision).run();
