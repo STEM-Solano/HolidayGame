@@ -5,7 +5,7 @@ export const renderPage = (apiOrigin = '') => `<!doctype html>
 <style>
 :root{color-scheme:dark;--ink:#f9f5ee;--muted:#b7b7d1;--panel:#191b35;--line:#353853;--lime:#dbf979;--accent:#bfb0ff}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% 0%,#32265f 0%,transparent 49%),#101122;color:var(--ink);font:1rem system-ui,sans-serif;min-height:100vh}
-main{max-width:1000px;margin:auto;padding:32px 20px 48px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:38px;font-weight:800}small, p{color:var(--muted)}p{line-height:1.55}h1{font-size:clamp(2.2rem,7vw,4.8rem);line-height:1.02;letter-spacing:-.055em;margin:.18em 0 .32em}h2{margin:0 0 15px}h3{margin:0 0 8px}.tag{color:var(--accent);font-weight:750;letter-spacing:.13em;text-transform:uppercase;font-size:.86rem}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:19px;margin-top:26px}.card{background:var(--panel);border:1px solid var(--line);padding:clamp(19px,4vw,32px);border-radius:21px}.highlight{border-color:#565084}.code{font-size:clamp(1.8rem,8vw,3rem);letter-spacing:.13em;color:var(--lime);font-weight:900;margin:7px 0 14px}.controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}button,input{font:inherit;border-radius:11px;min-height:47px}button{padding:10px 16px;font-weight:800;color:#151729;background:var(--lime);border:1px solid transparent;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border-color:#62658a}button:disabled{opacity:.55;cursor:default}input{padding:10px 12px;width:100%;color:var(--ink);background:#111228;border:1px solid #62658a}label{display:block;font-weight:700;margin:12px 0 6px}form button{margin-top:14px}.team,.answer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;overflow-wrap:anywhere}.answer em{font-style:normal;color:var(--lime);font-weight:850}.blank{color:var(--muted)}.points{font-variant-numeric:tabular-nums;color:var(--lime);font-weight:850}.question{font-size:clamp(1.65rem,5.5vw,3.2rem)}#message{color:#ffc9d3;min-height:1.5em;margin-top:16px}a{color:var(--accent)}.tie{display:flex;align-items:center;gap:10px}.tie input{width:22px;min-height:26px}.join-code{margin:18px 0 10px;display:grid;justify-items:start;gap:7px}.join-code canvas{width:min(100%,220px);height:auto;image-rendering:pixelated;border-radius:8px}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.grid{grid-template-columns:1fr}header{margin-bottom:24px}main{padding-top:20px}}
+main{max-width:1000px;margin:auto;padding:32px 20px 48px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:38px;font-weight:800}small, p{color:var(--muted)}p{line-height:1.55}h1{font-size:clamp(2.2rem,7vw,4.8rem);line-height:1.02;letter-spacing:-.055em;margin:.18em 0 .32em}h2{margin:0 0 15px}h3{margin:0 0 8px}.tag{color:var(--accent);font-weight:750;letter-spacing:.13em;text-transform:uppercase;font-size:.86rem}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:19px;margin-top:26px}.card{background:var(--panel);border:1px solid var(--line);padding:clamp(19px,4vw,32px);border-radius:21px}.highlight{border-color:#565084}.code{font-size:clamp(1.8rem,8vw,3rem);letter-spacing:.13em;color:var(--lime);font-weight:900;margin:7px 0 14px}.controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}button,input,#guess-answer,#question-count{font:inherit;border-radius:11px;min-height:47px}button{padding:10px 16px;font-weight:800;color:#151729;background:var(--lime);border:1px solid transparent;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border-color:#62658a}button:disabled{opacity:.55;cursor:default}input,#guess-answer,#question-count{padding:10px 12px;width:100%;color:var(--ink);background:#111228;border:1px solid #62658a}label{display:block;font-weight:700;margin:12px 0 6px}form button{margin-top:14px}.team,.answer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;overflow-wrap:anywhere}.answer em{font-style:normal;color:var(--lime);font-weight:850}.blank{color:var(--muted)}.points{font-variant-numeric:tabular-nums;color:var(--lime);font-weight:850}.question{font-size:clamp(1.65rem,5.5vw,3.2rem)}#message{color:#ffc9d3;min-height:1.5em;margin-top:16px}a{color:var(--accent)}.tie{display:flex;align-items:center;gap:10px}.tie input{width:22px;min-height:26px}.join-code{margin:18px 0 10px;display:grid;justify-items:start;gap:7px}.join-code canvas{width:min(100%,220px);height:auto;image-rendering:pixelated;border-radius:8px}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.grid{grid-template-columns:1fr}header{margin-bottom:24px}main{padding-top:20px}}
 dialog{width:min(680px,calc(100% - 28px));max-height:90dvh;padding:24px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px}dialog::backdrop{background:#08091ab8}dialog details{padding:12px 0;border-bottom:1px solid var(--line)}dialog summary{cursor:pointer;font-weight:700}dialog select,dialog textarea{width:100%;padding:10px 12px;background:#111228;color:var(--ink);border:1px solid #62658a;border-radius:11px;font:inherit;resize:vertical}dialog [role=status]{color:#ffc9d3;flex-basis:100%;margin:0}dialog [role=status]:empty{display:none}dialog h3:not(:first-child){margin-top:18px}dialog .controls{position:sticky;bottom:-24px;padding:12px 0;background:var(--panel)}
 </style></head><body><main>
 <header><span>◈ &nbsp; TEAM FEUD – HOLIDAY EDITION</span><small>6 teams · 3 rounds</small></header>
@@ -36,7 +36,7 @@ async function request(path,body,key=session?.key){
   return data;
 }
 function home(){
-  root.innerHTML='<div class="tag">Team Feud: Holiday Edition Survey guessing game</div><h1>Guess what<br>the crowd said.</h1><p>Guess the most popular answers from published YouGov polls. Each round has five questions. Six teams start. Four advance to the semifinal, then two face off in the final.</p><div class="grid"><section class="card highlight"><h2>Join a game</h2><form id="join"><label for="code">Room code</label><input id="code" name="code" value="'+esc(urlCode)+'" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters"><label for="name">Team name</label><input id="name" name="name" maxlength="26" required autocomplete="off"><button>Join team</button> <button type="submit" name="mode" value="watch" formnovalidate class="secondary">Watch live</button></form></section><section class="card"><h2>Host a game</h2><p>Share the room link, then open and reveal each round. You can project this screen for everyone.</p><button id="create">Create room</button></section></div>';
+  root.innerHTML='<div class="tag">Team Feud: Holiday Edition Survey guessing game</div><h1>Guess what<br>the crowd said.</h1><p>Guess the most popular answers from published YouGov polls. The host sets the number of questions per round. Six teams start. Four advance to the semifinal, then two face off in the final.</p><div class="grid"><section class="card highlight"><h2>Join a game</h2><form id="join"><label for="code">Room code</label><input id="code" name="code" value="'+esc(urlCode)+'" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters"><label for="name">Team name</label><input id="name" name="name" maxlength="26" required autocomplete="off"><button>Join team</button> <button type="submit" name="mode" value="watch" formnovalidate class="secondary">Watch live</button></form></section><section class="card"><h2>Host a game</h2><p>Share the room link, then open and score each question.</p><button id="create">Create room</button></section></div>';
 }
 function roomLink(watch=false){
   const link=new URL(location.pathname,location.origin);
@@ -70,11 +70,11 @@ function render(game){
   const questionId=(game.gameNumber??0)+'-'+game.round;
   const priorDraft=draft?.dataset.question===questionId ? draft.value : '';
   const active=draft && document.activeElement===draft;
-  const caret=active ? draft.selectionStart : null;
+  const caret=active && draft instanceof HTMLInputElement ? draft.selectionStart : null;
   const host=game.role==='host';
   const viewer=game.role==='watch';
-  const teams=[...game.teams].sort((a,b)=>Number(b.active)-Number(a.active)||b.score-a.score);
-  const teamList=teams.map(t=>'<div class="team"><div><strong>'+esc(t.name)+'</strong>'+(t.ai?' <small>· AI</small>':'')+(!t.active?' <small>· eliminated</small>':'')+(game.phase==='open'&&t.submitted?' <small>· locked in</small>':'')+(game.phase==='reveal'&&t.guess?'<br><small>'+esc(t.guess)+' · +'+t.points+'</small>':'')+'</div><span class="points">'+t.score+'</span></div>').join('');
+  const teams=[...game.teams].sort((a,b)=>Number(b.active)-Number(a.active)||(b.tieScore??b.score??0)-(a.tieScore??a.score??0));
+  const teamList=teams.map(t=>'<div class="team"><div><strong>'+esc(t.name)+'</strong>'+(t.ai?' <small>· AI</small>':'')+(!t.active?' <small>· eliminated</small>':'')+(game.phase==='open'&&t.submitted?' <small>· locked in</small>':'')+(game.phase==='reveal'&&t.guess?'<br><small>'+esc(t.guess)+' · +'+t.points+'</small>':'')+'</div>'+(t.score===undefined?'':'<span class="points">'+t.score+(t.tieScore===undefined?'':' <small>· '+t.tieScore+' tiebreak</small>')+'</span>')+'</div>').join('');
   let panel='';
   if(game.phase==='lobby'){
     const emptySlots=6-teams.length;
@@ -85,41 +85,48 @@ function render(game){
     const editQuestions=game.questionSetup
       ? '<button class="secondary" id="edit-questions">Edit questions'+(customCount?' ('+customCount+' custom)':'')+'</button>'
       : '';
-    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?'<div class="join-code"><strong>Scan to join a team</strong><canvas id="join-qr" role="img" aria-label="QR code to join this room"></canvas></div><div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button>'+aiStart+editQuestions+'</div>':'<p>Waiting for the host to start.</p>');
+    const countPicker=game.dropdown
+      ? '<label for="question-count">Questions per round</label><select id="question-count">'+
+        Array.from({length:10},(_,index)=>'<option'+(index+1===game.questionsPerRound?' selected':'')+'>'+(index+1)+'</option>').join('')+'</select>'
+      : '';
+    panel='<div class="tag">Lobby</div><h1>Room is open.</h1><div class="code">'+esc(session.code)+'</div><p>'+game.teams.length+' of 6 teams joined.</p>'+(host?countPicker+'<div class="join-code"><strong>Scan to join a team</strong><canvas id="join-qr" role="img" aria-label="QR code to join this room"></canvas></div><div class="controls"><button class="secondary" id="copy">Copy team link</button><button class="secondary" id="watch-copy">Copy spectator link</button><button id="advance" '+(teams.length!==6?'disabled':'')+'>Start opening round</button>'+aiStart+editQuestions+'</div>':'<p>Waiting for the host to start.</p>');
   } else if(game.phase==='advancement'){
     panel='<div class="tag">Advancement</div><h1 class="question">'+(game.qualified.length===4?'Semifinal teams':'Final face-off')+'</h1>'+game.qualified.map(name=>'<div class="answer"><strong>'+esc(name)+'</strong></div>').join('')+(host?'<div class="controls"><button id="advance">Start '+(game.qualified.length===4?'semifinal':'final')+'</button></div>':'<p>Waiting for the host to start the next round.</p>');
   } else if(game.phase==='finished'){
-    panel='<div class="tag">Champion</div><h1 class="question">'+esc(game.winner)+'</h1><p>'+teams.find(t=>t.name===game.winner).score+' points in the final face-off.</p>';
+    panel='<div class="tag">Champion</div><h1 class="question">'+esc(game.winner)+'</h1>'+(host||!game.dropdown?'<p>'+teams.find(t=>t.name===game.winner).score+' total points.</p>':'');
   } else {
     const revealed=game.phase==='reveal';
-    panel='<div class="tag">'+esc(game.stage)+' · Question '+game.questionNumber+' of '+(game.questionsPerRound??2)+'</div><h1 class="question">'+esc(game.question)+'</h1>';
+    panel='<div class="tag">'+esc(game.stage)+(game.tieActive?' · Tiebreaker':' · Question '+game.questionNumber+' of '+(game.questionsPerRound??2))+'</div><h1 class="question">'+esc(game.question)+'</h1>';
     if(revealed){
+      if(game.dropdown && !host) panel+='<p>Waiting for the host to continue.</p>';
       panel+=game.board.map((a,i)=>'<div class="answer"><span>'+(i+1)+'. '+esc(a.answer)+'</span><em>'+a.points+'</em></div>').join('');
       if(game.source) panel+='<p><a href="'+esc(game.source)+'" target="_blank" rel="noopener noreferrer">Source: YouGov plc, '+game.year+', © All rights reserved</a></p>';
       if(host){
-        if(game.lastQuestion && game.tiebreak){
+        if(game.lastQuestion && game.tiebreak && !game.dropdown){
           panel+='<p>Tie at the cutoff. Select '+game.tiebreak.slots+' tied team(s) after your tiebreaker.</p>'+game.tiebreak.names.map(name=>'<label class="tie"><input type="checkbox" name="pick" value="'+esc(name)+'"> '+esc(name)+'</label>').join('');
         }
-        panel+='<div class="controls"><button id="advance">'+(!game.lastQuestion?'Next question':(game.finalQuestion??game.round===6)?'Crown champion':'Show advancing teams')+'</button></div>';
+        panel+='<div class="controls"><button id="advance">'+(game.dropdown && game.tiebreak?(game.tieActive?'Next tiebreak question':'Start tiebreaker') : !game.lastQuestion?'Next question':(game.finalQuestion??game.round===6)?'Crown champion':'Show advancing teams')+'</button></div>';
       }
     }else{
-      if(host) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.active).length+' teams locked in.</p><button id="advance">Reveal results</button>';
-      else if(viewer||game.eliminated) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.active).length+' teams locked in. Results appear when the host reveals them.</p>';
-      else if(game.submitted) panel+='<p>Guess locked in. The host will reveal the results.</p>';
+      if(host) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.eligible??t.active).length+' teams locked in.</p><button id="advance">Reveal results</button>';
+      else if(viewer||game.eliminated||(game.dropdown&&!game.canGuess)) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.eligible??t.active).length+' teams locked in. Waiting for the host to continue.</p>';
+      else if(game.submitted) panel+='<p>Guess locked in. Waiting for the host.</p>';
+      else if(game.dropdown) panel+='<form id="guess"><label for="guess-answer">Your team’s answer</label><select id="guess-answer" name="answer" data-question="'+questionId+'" required><option value="">Choose an answer</option>'+
+        game.choices.map(choice=>'<option'+(choice===priorDraft?' selected':'')+'>'+esc(choice)+'</option>').join('')+'</select><button>Lock in answer</button></form>';
       else panel+='<form id="guess"><label for="guess-answer">Your team’s guess</label><input id="guess-answer" name="answer" data-question="'+questionId+'" value="'+esc(priorDraft)+'" maxlength="120" required autocomplete="off"><button>Lock in guess</button></form>';
-      panel+='<p><small>'+game.slots+' answers on the board.</small></p>';
+      if(game.slots!==null) panel+='<p><small>'+game.slots+' answers on the board.</small></p>';
     }
   }
   const roomControls='<div class="controls">'+(host&&game.phase!=='lobby'
     ? '<button class="secondary" id="restart">Start over</button>' : '')+
     '<button class="secondary" id="leave">Quit</button></div>';
-  root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(viewer||host?'Scoreboard':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+roomControls+'</aside></div>';
+  root.innerHTML='<div class="grid"><section class="card highlight">'+panel+'</section><aside class="card"><h2>'+(host||viewer&&!game.dropdown?'Scoreboard':viewer?'Teams':'Team '+esc(game.team))+'</h2>'+(teamList||'<p>No teams have joined yet.</p>')+roomControls+'</aside></div>';
   const canvas=root.querySelector('#join-qr');
   if(canvas)drawJoinCode(canvas);
   if(active && priorDraft!==undefined){
     const replacement=root.querySelector('#guess-answer');
     replacement?.focus();
-    replacement?.setSelectionRange(caret,caret);
+    if(caret!==null && replacement instanceof HTMLInputElement) replacement.setSelectionRange(caret,caret);
   }
 }
 const endpoint=()=>'/api/room/'+session.code+(session.role==='watch'?'?watch=1':'');
@@ -157,12 +164,13 @@ function editQuestions(game){
       picker+'<p class="bank-prompt"'+(selected==='custom'?' hidden':'')+'>'+esc(currentChoice?.prompt??question.defaultPrompt)+'</p>'+
       '<div class="custom-fields"'+(game.questionBank&&selected!=='custom'?' hidden':'')+'>'+
       '<label for="prompt-'+index+'">Custom question</label><input id="prompt-'+index+'" name="prompt" maxlength="240" value="'+esc(question.prompt)+'">'+
-      '<label for="answers-'+index+'">Answers and points</label><textarea id="answers-'+index+'" name="answers" rows="4" maxlength="8500" placeholder="Hot chocolate | 40 | cocoa">'+esc(question.answers)+'</textarea></div></details>';
+      '<label for="answers-'+index+'">Answers and points</label><textarea id="answers-'+index+'" name="answers" rows="4" maxlength="8500" placeholder="Hot chocolate | 40 | cocoa">'+esc(question.answers)+'</textarea>'+
+      (game.dropdown?'<label for="distractors-'+index+'">Non-scoring choices</label><textarea id="distractors-'+index+'" name="distractors" rows="3" maxlength="730">'+esc(question.distractors)+'</textarea>':'')+'</div></details>';
   }).join('');
   const instructions=game.questionBank
-    ? 'Choose five questions for each round from the '+game.questionBank.length+' YouGov questions, or write your own. Use each YouGov question once.'
+    ? 'Choose '+count+' questions for each round from the '+game.questionBank.length+' YouGov questions, or write your own. Use each YouGov question once.'
     : 'Leave both fields blank to use the built-in question.';
-  questionEditor.innerHTML='<h2 id="question-editor-title">Edit questions</h2><p>'+instructions+'</p><p>For custom questions, enter 2 to 10 answers, one per line. Use <strong>Answer | Points | Alternate spelling</strong>. Points must be whole numbers from 1 to 100.</p><form>'+slots+'<div class="controls"><p role="status"></p><button>Save questions</button><button type="button" class="secondary" id="close-editor">Cancel</button></div></form>';
+  questionEditor.innerHTML='<h2 id="question-editor-title">Edit questions</h2><p>'+instructions+'</p><p>For custom questions, enter 2 to 10 answers, one per line. Use <strong>Answer | Points | Alternate spelling</strong>. Points must be whole numbers from 1 to 100.</p>'+(game.dropdown?'<p>Add 2 to 6 plausible non-scoring choices, one per line.</p>':'')+'<form>'+slots+'<div class="controls"><p role="status"></p><button>Save questions</button><button type="button" class="secondary" id="close-editor">Cancel</button></div></form>';
   if(game.questionBank) updateQuestionOptions(game.questionBank);
   questionEditor.scrollTop=0;
   questionEditor.showModal();
@@ -207,6 +215,7 @@ questionEditor.addEventListener('submit',async event=>{
   if(busy) return;
   const form=new FormData(event.target);
   const answers=form.getAll('answers');
+  const distractors=form.getAll('distractors');
   const bankChoices=[...event.target.querySelectorAll('select[name=bank]')].map(picker=>picker.value);
   const emptySlot=bankChoices.indexOf('');
   const status=questionEditor.querySelector('[role=status]');
@@ -220,7 +229,7 @@ questionEditor.addEventListener('submit',async event=>{
   const questions=form.getAll('prompt').map((prompt,index)=>{
     const choice=bankChoices[index];
     if(choice && choice!=='custom') return {bankIndex:Number(choice),prompt:'',answers:''};
-    return {bankIndex:choice==='custom'?null:undefined,prompt,answers:answers[index]};
+    return {bankIndex:choice==='custom'?null:undefined,prompt,answers:answers[index],distractors:distractors[index]};
   });
   const button=questionEditor.querySelector('button');
   status.textContent='';
@@ -267,6 +276,15 @@ root.addEventListener('click',event=>{
     if(session.role!=='watch') remember(null);
     location.href=location.pathname;
   }
+});
+root.addEventListener('change',event=>{
+  if(event.target.id!=='question-count') return;
+  const count=Number(event.target.value);
+  event.target.value=current.questionsPerRound;
+  void act(async()=>{
+    current=await request(endpoint(),{action:'setQuestionCount',gameNumber:current.gameNumber,count});
+    render(current);
+  });
 });
 root.addEventListener('submit',event=>{
   event.preventDefault();
