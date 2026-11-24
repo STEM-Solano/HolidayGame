@@ -66,6 +66,7 @@ function render(game){
   const signature=JSON.stringify(game);
   if(signature===lastView) return;
   lastView=signature;
+  const historyOpen=root.querySelector('#what-if-history')?.open;
   const draft=root.querySelector('#guess-answer');
   const questionId=(game.gameNumber??0)+'-'+game.round;
   const priorDraft=draft?.dataset.question===questionId ? draft.value : '';
@@ -109,13 +110,18 @@ function render(game){
       }
     }else{
       if(host) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.eligible??t.active).length+' teams locked in.</p><button id="advance">Reveal results</button>';
-      else if(viewer||game.eliminated||(game.dropdown&&!game.canGuess)) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.eligible??t.active).length+' teams locked in. Waiting for the host to continue.</p>';
-      else if(game.submitted) panel+='<p>Guess locked in. Waiting for the host.</p>';
+      else if(viewer||(game.dropdown?!game.canGuess:game.eliminated)) panel+='<p>'+teams.filter(t=>t.submitted).length+' of '+teams.filter(t=>t.eligible??t.active).length+' teams locked in. Waiting for the host to continue.</p>';
+      else if(game.submitted) panel+=game.eliminated?'<p>What If pick saved. Waiting for the host.</p>':'<p>Guess locked in. Waiting for the host.</p>';
       else if(game.dropdown) panel+='<form id="guess"><label for="guess-answer">Your team’s answer</label><select id="guess-answer" name="answer" data-question="'+questionId+'" required><option value="">Choose an answer</option>'+
-        game.choices.map(choice=>'<option'+(choice===priorDraft?' selected':'')+'>'+esc(choice)+'</option>').join('')+'</select><button>Lock in answer</button></form>';
+        game.choices.map(choice=>'<option'+(choice===priorDraft?' selected':'')+'>'+esc(choice)+'</option>').join('')+'</select><button>'+(game.eliminated?'Save What If pick':'Lock in answer')+'</button></form>';
       else panel+='<form id="guess"><label for="guess-answer">Your team’s guess</label><input id="guess-answer" name="answer" data-question="'+questionId+'" value="'+esc(priorDraft)+'" maxlength="120" required autocomplete="off"><button>Lock in guess</button></form>';
       if(game.slots!==null) panel+='<p><small>'+game.slots+' answers on the board.</small></p>';
     }
+  }
+  if(game.dropdown && game.eliminated){
+    panel+='<section><h2>What If</h2><p>Keep playing. Your picks are private to your team and do not affect the game results.</p>'+
+      ((game.whatIfPicks??[]).length?'<details id="what-if-history"'+(historyOpen?' open':'')+'><summary>Your saved picks ('+(game.whatIfPicks??[]).length+')</summary><ol>'+
+        game.whatIfPicks.map(pick=>'<li>'+esc(pick.question)+' <strong>'+esc(pick.answer)+'</strong></li>').join('')+'</ol></details>':'')+'</section>';
   }
   const roomControls='<div class="controls">'+(host&&game.phase!=='lobby'
     ? '<button class="secondary" id="restart">Start over</button>' : '')+
