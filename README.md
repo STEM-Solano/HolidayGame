@@ -15,23 +15,25 @@ The local server keeps rooms in memory until it stops. Room codes expire after 1
 
 Create a room on the host screen and join as a human team from a phone or a private browser window. In the host lobby, choose **Start with 5 AI teams**. With two to five human teams, the button fills only the remaining slots.
 
-AI teams automatically lock one randomly selected survey answer per question. They earn points and advance under the same rules as human teams. The host still controls reveals, advancement, and tiebreakers.
+AI teams automatically lock one randomly selected dropdown choice per question. They earn points and advance under the same rules as human teams. The host still controls reveals, advancement, and tiebreakers.
 
 ## Choose or write questions
 
-In the host lobby, choose **Edit questions**. Each round starts with five preselected questions. For each slot, choose any of the 50 fixed YouGov questions or select **Write a custom question** and enter 2–10 answers with points. Each YouGov question can appear once per game. Use one answer per line in the format `Answer | Points | Alternate spelling`. Points are whole numbers from 1 to 100. Add optional alternate spellings with extra pipe separators.
+In the host lobby, set **Questions per round** to 1–10 (default 5), then choose **Edit questions** to review or replace the preselected questions. For each slot, choose any of the 50 fixed YouGov questions or select **Write a custom question** and enter 2–10 answers with points. Each YouGov question can appear once per game. Use one answer per line in the format `Answer | Points | Alternate spelling`. Points are whole numbers from 1 to 100. Add 2–6 plausible non-scoring choices in the separate field, one per line.
 
-Save before starting. The questions apply to that room, and players see the answers when the host reveals them.
+Save before starting. Teams lock in one answer from an alphabetical dropdown containing survey answers and non-scoring choices. Only the host screen displays scores, revealed answers, and the source poll.
 
 ## Game format
 
-- Opening round: six teams answer five questions. Four advance.
-- Semifinal: four teams answer five questions. Two advance.
-- Face-off: two teams answer five questions. The higher score wins.
+- Opening round: six teams answer the configured number of questions. Four advance.
+- Semifinal: four teams answer the configured number of questions. Two advance.
+- Face-off: two teams answer the configured number of questions. The higher score wins.
 
-Active teams start each round at zero. Each team can lock one guess per question. Matching answers earn the published survey percentage or host-assigned points. The host reveals each answer board, confirms who advances, and starts the next round. For a tie at the cutoff, the host runs a tiebreaker and selects the winning team or teams on the host screen.
+Team scores carry across all three rounds. The host opens and scores one question at a time with **Reveal results**, then advances to the next question or round. Survey answers earn the published percentage or host-assigned points. Other choices earn zero.
 
-Spectators can watch the scoreboard, reveals, and advancement screens without taking a team slot. The source poll is linked on each reveal.
+When teams tie for an advancement slot or the championship, the host starts a tiebreaker using a question from the bank. The tied teams start with a separate score of zero. The host can run another tiebreak question if the cutoff is still tied. Regular game scores carry forward without adding the tiebreak points.
+
+Spectators can follow the questions and advancement without taking a team slot.
 
 ## Quit or restart
 
