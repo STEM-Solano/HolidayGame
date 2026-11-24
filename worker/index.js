@@ -1,4 +1,5 @@
 import {legacyPolls,polls,questionBank} from './polls.js';
+import {distractors} from './distractors.js';
 import {page} from './page.js';
 
 const pagesOrigin = 'https://stem-solano.github.io';
@@ -24,10 +25,11 @@ const stages = ['Opening round', 'Semifinal', 'Final face-off'];
 
 const formats = {
   2: {polls:legacyPolls, questionsPerRound:2},
-  3: {polls, questionsPerRound:5}
+  3: {polls, questionsPerRound:5},
+  4: {polls:questionBank, questionsPerRound:5}
 };
 
-function parseCustomQuestions(questions, count) {
+function parseCustomQuestions(questions, count, dropdown) {
   if(!Array.isArray(questions) || questions.length!==count) throw new Error('Submit all question slots.');
   return questions.map((entry,index)=>{
     if(!entry || typeof entry.prompt!=='string' || typeof entry.answers!=='string'){
@@ -59,18 +61,74 @@ function parseCustomQuestions(questions, count) {
       for(const spelling of spellings) seen.add(spelling);
       return [label,Number(points),...aliases];
     }).sort((a,b)=>b[1]-a[1]);
-    return ['Host question',prompt,null,null,answers];
+    const choices=(entry.distractors??'').split(/\r?\n/).map(value=>value.trim()).filter(Boolean);
+    if(dropdown && (choices.length<2 || choices.length>6)) failQuestion('Enter 2 to 6 non-scoring choices.');
+    for(const choice of choices){
+      const normalized=normalize(choice);
+      if(!normalized || choice.length>120 || seen.has(normalized) || seen.has(normalized+'s') || (normalized.endsWith('s') && seen.has(normalized.slice(0,-1)))){
+        failQuestion('Use distinct non-scoring choices of up to 120 characters.');
+      }
+      seen.add(normalized);
+    }
+    return ['Host question',prompt,null,null,answers,choices];
   });
 }
 
 function questionAt(state, polls) {
+  if(state.tie) return questionBank[state.tie.bankIndex];
   return state.customQuestions?.[state.round] ??
     questionBank[state.selectedPolls?.[state.round]] ?? polls[state.round];
+}
+
+function choicesFor(poll) {
+  const extras=poll[5]??distractors[questionBank.indexOf(poll)];
+  return [...poll[4].map(([answer])=>answer),...extras].sort((a,b)=>a.localeCompare(b,'en'));
+}
+
+const questionCount = state => state.questionsPerRound ?? formats[state.version].questionsPerRound;
+const questionToken = state => state.round+1+(state.tie ? state.tie.sequence*100 : 0);
+const eligible = (state, team) => team.active && (!state.tie || state.tie.scores[team.key]!==undefined);
+
+function startTiebreak(state, cutoff) {
+  const count=questionCount(state)*3;
+  const used=new Set(Array.from({length:count},(_,index)=>
+    state.customQuestions?.[index] ? null : state.selectedPolls?.[index]??index));
+  const available=questionBank.map((_,index)=>index).filter(index=>!used.has(index));
+  const sequence=(state.tieSequence??0)+1;
+  state.tieSequence=sequence;
+  state.tie={
+    sequence,
+    bankIndex:available[(sequence-1)%available.length],
+    scores:state.tie?.scores??Object.fromEntries(cutoff.tied.map(t=>[t.key,0])),
+    automatic:state.tie?.automatic??cutoff.automatic.map(t=>t.key),
+    slots:state.tie?.slots??cutoff.slots
+  };
+}
+
+function openQuestion(state, polls) {
+  state.phase='open';
+  state.guesses={};
+  const poll=questionAt(state,polls);
+  const options=state.version===4 ? choicesFor(poll) : poll[4].map(([label])=>label);
+  for(const team of state.teams.filter(t=>t.ai && eligible(state,t))){
+    state.guesses[team.key]={text:options[Math.floor(Math.random()*options.length)]};
+  }
 }
 
 function qualification(state, stageIndex) {
   const limit = [4, 2, 1][stageIndex];
   const ranked = state.teams.filter(t=>t.active).sort((a,b)=>b.score-a.score);
+  if(state.tie){
+    const {scores,slots,automatic}=state.tie;
+    const rankedTie=ranked.filter(t=>eligible(state,t)).sort((a,b)=>scores[b.key]-scores[a.key]);
+    const cutoff=scores[rankedTie[slots-1].key];
+    const ahead=rankedTie.filter(t=>scores[t.key]>cutoff);
+    return {
+      automatic:ranked.filter(t=>automatic.includes(t.key)).concat(ahead),
+      tied:rankedTie.filter(t=>scores[t.key]===cutoff),
+      slots:slots-ahead.length
+    };
+  }
   const cutoff = ranked[limit-1].score;
   const automatic = ranked.filter(t=>t.score>cutoff);
   const tied = ranked.filter(t=>t.score===cutoff);
@@ -78,39 +136,47 @@ function qualification(state, stageIndex) {
 }
 
 function view(state, role, team) {
-  const {polls,questionsPerRound} = formats[state.version];
+  const {polls} = formats[state.version];
+  const questionsPerRound=questionCount(state);
   const stageIndex = Math.floor(state.round / questionsPerRound);
   const questionNumber = state.round % questionsPerRound + 1;
   const poll = questionAt(state, polls);
   const reveal = state.phase === 'reveal';
   const live = state.phase === 'open' || reveal;
   const lastQuestion = reveal && questionNumber === questionsPerRound;
-  const finalQuestion = state.round === polls.length - 1;
+  const finalQuestion = state.round === questionsPerRound*3 - 1;
+  const dropdown=state.version===4;
+  const showBoard=reveal && (!dropdown || role==='host');
+  const showScores=!dropdown || role==='host';
+  const canGuess=team && eligible(state,team);
   const cutoff = lastQuestion ? qualification(state, stageIndex) : null;
   return {
-    gameNumber:state.gameNumber??0, role, team: team?.name, eliminated: team?.active === false, round: state.round + 1, phase: state.phase,
+    gameNumber:state.gameNumber??0, role, team: team?.name, eliminated: team?.active === false, round: questionToken(state), phase: state.phase,
     stage: live ? stages[stageIndex] : null, questionNumber: live ? questionNumber : null, questionsPerRound,
+    dropdown, tieActive:!!state.tie, canGuess:!!canGuess,
+    choices:dropdown && canGuess && state.phase==='open' ? choicesFor(poll) : [],
     lastQuestion, finalQuestion, winner: state.winner, qualified: state.qualified, category: live ? poll[0] : null,
-    question: live ? poll[1] : null, slots: live ? poll[4].length : null,
-    source: reveal && poll[2] ? 'https://yougov.com/en-us/' + poll[2] : null,
-    year: reveal ? poll[3] : null, board: reveal ? poll[4].map(([answer,points])=>({answer,points})) : [],
-    tiebreak: cutoff && cutoff.tied.length>cutoff.slots ? {names:cutoff.tied.map(t=>t.name),slots:cutoff.slots} : null,
-    ...(role==='host' && state.phase==='lobby' && state.version===3 ? {
+    question: live ? poll[1] : null, slots: live && (!dropdown || role==='host') ? poll[4].length : null,
+    source: showBoard && poll[2] ? 'https://yougov.com/en-us/' + poll[2] : null,
+    year: showBoard ? poll[3] : null, board: showBoard ? poll[4].map(([answer,points])=>({answer,points})) : [],
+    tiebreak: role==='host' && cutoff && cutoff.tied.length>cutoff.slots ? {names:cutoff.tied.map(t=>t.name),slots:cutoff.slots} : null,
+    ...(role==='host' && state.phase==='lobby' && state.version>=3 ? {
       questionBank:questionBank.map(([title,prompt])=>({title,prompt})),
-      questionSetup: polls.map((poll,index)=>{
+      questionSetup: polls.slice(0,questionsPerRound*3).map((poll,index)=>{
         const custom=state.customQuestions?.[index];
         return {
           defaultPrompt:poll[1],
           bankIndex:custom ? null : (state.selectedPolls?.[index]??index),
           prompt:custom?.[1]??'',
-          answers:custom?.[4].map(row=>row.join(' | ')).join('\n')??''
+          answers:custom?.[4].map(row=>row.join(' | ')).join('\n')??'',
+          distractors:custom?.[5]?.join('\n')??''
         };
       })
     } : {}),
     submitted: team && Object.hasOwn(state.guesses,team.key),
     teams: state.teams.map(t=>({
-      name:t.name, ai:t.ai === true, score:t.score, active:t.active, submitted:Object.hasOwn(state.guesses,t.key),
-      ...(reveal && t.active ? {guess:state.guesses[t.key]?.text, points:state.guesses[t.key]?.points ?? 0} : {})
+      name:t.name, ai:t.ai === true, ...(showScores ? {score:t.score,...(state.tie && eligible(state,t) ? {tieScore:state.tie.scores[t.key]} : {})} : {}), active:t.active, eligible:eligible(state,t), submitted:Object.hasOwn(state.guesses,t.key),
+      ...(showBoard && t.active ? {guess:state.guesses[t.key]?.text, points:state.guesses[t.key]?.points ?? 0} : {})
     }))
   };
 }
@@ -122,7 +188,7 @@ async function api(request, db, path) {
     for (let attempt=0; attempt<5; attempt++) {
       const number = crypto.getRandomValues(new Uint32Array(1))[0];
       const code = (number % 2176782336).toString(36).toUpperCase().padStart(6,'0');
-      const state = {version:3,round:-1,phase:'lobby',teams:[],guesses:{}};
+      const state = {version:4,round:-1,phase:'lobby',teams:[],guesses:{}};
       const result = await db.prepare('INSERT OR IGNORE INTO rooms (code,host,created,state) VALUES (?,?,?,?)')
         .bind(code,host,Date.now(),JSON.stringify(state)).run();
       if(result.meta.changes) return json({code,key:host,role:'host'});
@@ -139,7 +205,8 @@ async function api(request, db, path) {
     if(!row) return fail('Room not found or expired. Check the code with your host.',404);
     const state=JSON.parse(row.state);
     if(!Object.hasOwn(formats,state.version)) return fail('This room used an earlier format. Create a new room.',404);
-    const {polls,questionsPerRound}=formats[state.version];
+    const {polls}=formats[state.version];
+    const questionsPerRound=questionCount(state);
     const host=key===row.host;
     const team=state.teams.find(t=>t.key===key);
     if(request.method==='GET') {
@@ -166,13 +233,41 @@ async function api(request, db, path) {
       state.guesses={};
       delete state.qualified;
       delete state.winner;
+      delete state.tie;
+      delete state.tieSequence;
       for(const team of state.teams){
         team.score=0;
         team.active=true;
       }
-    } else if(host && body.action==='saveQuestions' && state.phase==='lobby' && state.version===3){
+    } else if(host && body.action==='setQuestionCount' && state.phase==='lobby' && state.version===4){
+      const count=body.count;
+      if(!Number.isInteger(count) || count<1 || count>10) return fail('Choose 1 to 10 questions per round.');
+      if(state.selectedPolls && count!==questionsPerRound){
+        const selectedPolls=[];
+        const customQuestions=[];
+        const used=new Set();
+        for(let stage=0;stage<stages.length;stage++){
+          for(let slot=0;slot<Math.min(questionsPerRound,count);slot++){
+            const previous=stage*questionsPerRound+slot;
+            const next=stage*count+slot;
+            selectedPolls[next]=state.selectedPolls[previous];
+            customQuestions[next]=state.customQuestions[previous];
+            if(!customQuestions[next]) used.add(selectedPolls[next]);
+          }
+        }
+        for(let index=0;index<count*3;index++){
+          if(selectedPolls[index]!==undefined) continue;
+          const next=questionBank.findIndex((_,bankIndex)=>!used.has(bankIndex));
+          selectedPolls[index]=next;
+          used.add(next);
+        }
+        state.selectedPolls=selectedPolls;
+        state.customQuestions=customQuestions;
+      }
+      state.questionsPerRound=count;
+    } else if(host && body.action==='saveQuestions' && state.phase==='lobby' && state.version>=3){
       try {
-        const customQuestions=parseCustomQuestions(body.questions,polls.length);
+        const customQuestions=parseCustomQuestions(body.questions,questionsPerRound*3,state.version===4);
         const used=new Set();
         const selectedPolls=body.questions.map((entry,index)=>{
           const bankIndex=entry.bankIndex??state.selectedPolls?.[index]??index;
@@ -193,7 +288,7 @@ async function api(request, db, path) {
       } catch(error) {
         return fail(error.message);
       }
-    } else if(host && body.action==='advance' && body.round===state.round+1 && body.phase===state.phase){
+    } else if(host && body.action==='advance' && body.round===questionToken(state) && body.phase===state.phase){
       if(state.phase==='lobby' && state.teams.length<6){
         if(body.fillWithAi!==true) return fail('All six teams must join before starting.');
         if(!state.teams.length) return fail('At least one human team must join first.');
@@ -209,44 +304,47 @@ async function api(request, db, path) {
         for(const t of state.teams){
           const guess=state.guesses[t.key];
           if(!guess) continue;
-          const answer=answers.find(([label,,...aliases])=>[label,...aliases].some(alias=>{
+          const answer=state.version===4 ? answers.find(([label])=>label===guess.text) : answers.find(([label,,...aliases])=>[label,...aliases].some(alias=>{
             const value=normalize(alias);
             const input=normalize(guess.text);
             return value===input || value+'s'===input || value===input+'s';
           }));
           guess.points=answer?.[1] ?? 0;
-          t.score+=guess.points;
+          if(state.tie) state.tie.scores[t.key]+=guess.points;
+          else t.score+=guess.points;
         }
       } else if(state.phase==='reveal' && (state.round+1)%questionsPerRound===0){
-        const {automatic,tied,slots}=qualification(state, Math.floor(state.round / questionsPerRound));
-        const picks = Array.isArray(body.picks) ? [...new Set(body.picks)] : [];
-        if(tied.length>slots && (picks.length!==slots || picks.some(name=>!tied.some(t=>t.name===name)))){
-          return fail('Select '+slots+' tied team(s) before confirming.');
-        }
-        const selected=automatic.concat(tied.length===slots?tied:tied.filter(t=>picks.includes(t.name)));
-        if(state.round===polls.length-1){
-          state.winner=selected[0].name;
-          state.phase='finished';
+        const cutoff=qualification(state, Math.floor(state.round / questionsPerRound));
+        const {automatic,tied,slots}=cutoff;
+        if(state.version===4 && tied.length>slots){
+          startTiebreak(state,cutoff);
+          openQuestion(state,polls);
         } else {
-          state.qualified=selected.map(t=>t.name);
-          state.teams.forEach(t=>{t.active=selected.includes(t);});
-          state.phase='advancement';
+          const picks = Array.isArray(body.picks) ? [...new Set(body.picks)] : [];
+          if(tied.length>slots && (picks.length!==slots || picks.some(name=>!tied.some(t=>t.name===name)))){
+            return fail('Select '+slots+' tied team(s) before confirming.');
+          }
+          const selected=automatic.concat(tied.length===slots?tied:tied.filter(t=>picks.includes(t.name)));
+          delete state.tie;
+          if(state.round===questionsPerRound*3-1){
+            state.winner=selected[0].name;
+            state.phase='finished';
+          } else {
+            state.qualified=selected.map(t=>t.name);
+            state.teams.forEach(t=>{t.active=selected.includes(t);});
+            state.phase='advancement';
+          }
         }
       } else if(['lobby','reveal','advancement'].includes(state.phase)){
-        if(state.phase==='advancement') state.teams.filter(t=>t.active).forEach(t=>{t.score=0;});
+        if(state.version!==4 && state.phase==='advancement') state.teams.filter(t=>t.active).forEach(t=>{t.score=0;});
         state.round++;
-        state.phase='open';
-        state.guesses={};
-        const answers=questionAt(state,polls)[4];
-        for(const t of state.teams.filter(team=>team.active && team.ai)){
-          const [answer]=answers[Math.floor(Math.random()*answers.length)];
-          state.guesses[t.key]={text:answer};
-        }
+        openQuestion(state,polls);
       } else return fail('The game has ended.');
-    } else if(team?.active && !team.ai && body.action==='guess'){
+    } else if(team && eligible(state,team) && !team.ai && body.action==='guess'){
       const answer=clean(body.answer);
-      if(state.phase!=='open'||body.round!==state.round+1) return fail('This round is closed.');
+      if(state.phase!=='open'||body.round!==questionToken(state)) return fail('This round is closed.');
       if(!answer) return fail('Enter one guess.');
+      if(state.version===4 && !choicesFor(questionAt(state,polls)).includes(answer)) return fail('Select an answer from the list.');
       if(Object.hasOwn(state.guesses,team.key)) return json(view(state,'team',team));
       state.guesses[team.key]={text:answer};
     } else return fail('That action is unavailable.',409);
