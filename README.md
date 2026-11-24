@@ -19,7 +19,7 @@ AI teams automatically lock one randomly selected dropdown choice per question. 
 
 ## Choose or write questions
 
-In the host lobby, set **Questions per round** to 1–10 (default 5), then choose **Edit questions** to review or replace the preselected questions. For each slot, choose any of the 50 fixed YouGov questions or select **Write a custom question** and enter 2–10 answers with points. Each YouGov question can appear once per game. Use one answer per line in the format `Answer | Points | Alternate spelling`. Points are whole numbers from 1 to 100. Add 2–6 plausible non-scoring choices in the separate field, one per line.
+In the host lobby, set **Questions per round** to 1–10 (default 5), then choose **Edit questions** to review or replace the preselected questions. For each slot, choose any of the 64 fixed YouGov questions or select **Write a custom question** and enter 2–10 answers with points. Each YouGov question can appear once per game. The 14 original questions at the bottom of the picker are available by manual selection. Use one answer per line in the format `Answer | Points | Alternate spelling`. Points are whole numbers from 1 to 100. Add 2–6 plausible non-scoring choices in the separate field, one per line.
 
 Save before starting. Teams lock in one answer from an alphabetical dropdown containing survey answers and non-scoring choices. Only the host screen displays scores, revealed answers, and the source poll.
 
