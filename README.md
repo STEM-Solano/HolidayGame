@@ -1,4 +1,4 @@
-# Team Feud
+# Holiday Team Fused
 
 A host-led survey guessing game for six teams, using published YouGov poll results.
 
@@ -9,7 +9,7 @@ A host-led survey guessing game for six teams, using published YouGov poll resul
 3. On the host laptop, open `http://localhost:3000` and create a room.
 4. Connect the phones and laptop to the same Wi-Fi. On the phones, open `http://<host-laptop-LAN-IP>:3000` and enter the room code. Allow incoming connections to port 3000 on the laptop if needed. For spectators, choose **Watch live** with the same room code, or use the spectator link from the host's lobby. Copy links from the laptop's LAN-IP page if you plan to share those links with phones.
 
-The local server keeps rooms in memory until it stops. Room codes expire after 12 hours.
+The local server keeps rooms in memory until it stops. Rooms close automatically one hour after creation. Start a new room and share its new code or QR link to play again.
 
 ## Test with AI teams
 
