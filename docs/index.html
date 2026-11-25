@@ -13,27 +13,13 @@
     p { color: #d3d1e5; line-height: 1.55; margin: 1rem 0 1.5rem; }
     a { color: #dbf979; }
     .open-game { display: inline-block; padding: .8rem 1rem; border-radius: .7rem; background: #dbf979; color: #151729; font-weight: 750; text-decoration: none; }
-    footer { margin-top: 1.5rem; }
   </style>
 </head>
 <body>
   <main>
     <h1>Holiday Team Fused</h1>
-    <p>Open the hosted game to create a room, join a team, or watch a live game.</p>
-    <a class="open-game" id="open-game" href="https://crowd-score-survey-game.mistycone2.chatgpt.site/">Open hosted game</a>
-    <footer><a href="https://github.com/STEM-Solano/HolidayGame#run-on-a-local-network">Run your own game</a></footer>
+    <p>Host a game on your laptop and have players on the same Wi-Fi join by scanning your room QR code. Players only need a team name.</p>
+    <a class="open-game" href="https://github.com/STEM-Solano/HolidayGame#run-on-a-local-network">View setup instructions</a>
   </main>
-  <script>
-    const params = new URLSearchParams(location.search);
-    const room = params.get('room')?.toUpperCase();
-    if (room && /^[A-Z0-9]{6}$/.test(room)) {
-      const link = document.getElementById('open-game');
-      const game = new URL(link.href);
-      game.searchParams.set('room', room);
-      if (params.get('watch') === '1') game.searchParams.set('watch', '1');
-      link.href = game.href;
-      link.textContent = params.get('watch') === '1' ? 'Watch this room' : 'Join this room';
-    }
-  </script>
 </body>
 </html>
