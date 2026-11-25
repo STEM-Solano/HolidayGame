@@ -1,4 +1,4 @@
-# Crowd Score
+# Team Feud
 
 A host-led survey guessing game for six teams, using published YouGov poll results.
 
