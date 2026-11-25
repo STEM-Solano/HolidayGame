@@ -41,7 +41,7 @@ Use **Quit** to return to the home screen on your device. Once a game starts, th
 
 ## GitHub Pages
 
-In **Settings → Pages**, choose **Deploy from a branch**, then select `main` and `/ (root)` to show these instructions at the GitHub Pages URL. Select `main` and `/docs` to show the hosted-game launcher at that same URL. The hosted game uses its own access settings. To play without accounts on the same Wi-Fi, follow the local network instructions above.
+In **Settings → Pages**, choose **Deploy from a branch**, then select `main` and `/ (root)` to show these instructions at the GitHub Pages URL. Select `main` and `/docs` to open the public multiplayer game at that same URL. Players can join without an account. When GitHub Pages publishes the instructions or is offline, the hosted game closes after the publishing change propagates. To play without accounts on the same Wi-Fi, follow the local network instructions above.
 
 ## Source layout
 
