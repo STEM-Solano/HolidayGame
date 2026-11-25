@@ -18,8 +18,24 @@
 <body>
   <main>
     <h1>Holiday Team Fused</h1>
-    <p>Host a game on your laptop and have players on the same Wi-Fi join by scanning your room QR code. Players only need a team name.</p>
-    <a class="open-game" href="https://github.com/STEM-Solano/HolidayGame#run-on-a-local-network">View setup instructions</a>
+    <p id="game-description">Host a game on your laptop and have players on the same Wi-Fi join by scanning your room QR code.</p>
+    <a class="open-game" id="game-link" href="https://github.com/STEM-Solano/HolidayGame#run-on-a-local-network">View setup instructions</a>
   </main>
+  <script>
+    if (!/\/docs(?:\/|$)/.test(location.pathname)) {
+      const link = document.getElementById('game-link');
+      const game = new URL("https://crowd-score-survey-game.mistycone2.chatgpt.site/");
+      const params = new URLSearchParams(location.search);
+      const room = params.get('room')?.toUpperCase();
+      const hasRoom = room && /^[A-Z0-9]{6}$/.test(room);
+      const watching = hasRoom && params.get('watch') === '1';
+      if (hasRoom) game.searchParams.set('room', room);
+      if (watching) game.searchParams.set('watch', '1');
+      link.href = game.href;
+      link.textContent = watching ? 'Watch this room' : hasRoom ? 'Join this room' : 'Open hosted game';
+      document.getElementById('game-description').textContent =
+        'Open the hosted game to create a room, join a team, or watch live. The hosted game requires ChatGPT sign-in.';
+    }
+  </script>
 </body>
 </html>
