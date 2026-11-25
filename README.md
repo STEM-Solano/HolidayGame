@@ -41,7 +41,7 @@ Use **Quit** to return to the home screen on your device. Once a game starts, th
 
 ## GitHub Pages
 
-GitHub Pages publishes the setup page in `docs/index.html`. To play without accounts, follow the local network instructions above. For players on different networks, deploy the Worker with its own D1 database and share the room link that your server generates.
+In **Settings → Pages**, choose **Deploy from a branch**, then select `main` and `/ (root)` to show these instructions at the GitHub Pages URL. Select `main` and `/docs` to show the hosted-game launcher at that same URL. The hosted game uses its own access settings. To play without accounts on the same Wi-Fi, follow the local network instructions above.
 
 ## Source layout
 
