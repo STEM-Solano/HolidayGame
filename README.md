@@ -39,9 +39,9 @@ Spectators can follow the questions and advancement without taking a team slot.
 
 Use **Quit** to return to the home screen on your device. Once a game starts, the host can choose **Start over** to return everyone to the lobby and reset scores, guesses, and advancement. The room code, teams, and saved questions carry over.
 
-## Hosted game and GitHub Pages
+## GitHub Pages
 
-GitHub Pages publishes `docs/index.html`, which opens the hosted game. Rooms run on the hosted server and use its access settings. To run your own instance, follow the local network instructions above or deploy the Worker with its own D1 database.
+GitHub Pages publishes the setup page in `docs/index.html`. To play without accounts, follow the local network instructions above. For players on different networks, deploy the Worker with its own D1 database and share the room link that your server generates.
 
 ## Source layout
 
