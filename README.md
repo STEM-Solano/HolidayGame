@@ -39,9 +39,7 @@ Spectators can follow the questions and advancement without taking a team slot.
 
 Use **Quit** to return to the home screen on your device. Once a game starts, the host can choose **Start over** to return everyone to the lobby and reset scores, guesses, and advancement. The room code, teams, and saved questions carry over.
 
-## GitHub Pages
 
-In **Settings → Pages**, choose **Deploy from a branch**, then select `main` and `/ (root)` to show these instructions at the GitHub Pages URL. Select `main` and `/docs` to open the public multiplayer game at that same URL. Players can join without an account. When GitHub Pages publishes the instructions or is offline, the hosted game closes after the publishing change propagates. To play without accounts on the same Wi-Fi, follow the local network instructions above.
 
 ## Source layout
 
