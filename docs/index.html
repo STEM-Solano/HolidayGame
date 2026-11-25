@@ -1,41 +1,56 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="referrer" content="no-referrer">
-  <title>Holiday Team Fused</title>
-  <style>
-    :root { color-scheme: dark; font: 100% system-ui, sans-serif; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(ellipse at top right, #32265f, transparent 55%), #101122; color: #f9f5ee; }
-    main { box-sizing: border-box; width: min(38rem, calc(100% - 2rem)); padding: clamp(1.5rem, 6vw, 3rem); background: #191b35; border: 1px solid #535477; border-radius: 1.25rem; }
-    h1 { font-size: clamp(2rem, 7vw, 3.5rem); line-height: 1.05; margin: 0; }
-    p { color: #d3d1e5; line-height: 1.55; margin: 1rem 0 1.5rem; }
-    a { color: #dbf979; }
-    .open-game { display: inline-block; padding: .8rem 1rem; border-radius: .7rem; background: #dbf979; color: #151729; font-weight: 750; text-decoration: none; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>Holiday Team Fused</h1>
-    <p id="game-description">Host a game on your laptop and have players on the same Wi-Fi join by scanning your room QR code.</p>
-    <a class="open-game" id="game-link" href="https://github.com/STEM-Solano/HolidayGame#run-on-a-local-network">View setup instructions</a>
-  </main>
-  <script>
-    if (!/\/docs(?:\/|$)/.test(location.pathname)) {
-      const link = document.getElementById('game-link');
-      const game = new URL("https://crowd-score-survey-game.mistycone2.chatgpt.site/");
-      const params = new URLSearchParams(location.search);
-      const room = params.get('room')?.toUpperCase();
-      const hasRoom = room && /^[A-Z0-9]{6}$/.test(room);
-      const watching = hasRoom && params.get('watch') === '1';
-      if (hasRoom) game.searchParams.set('room', room);
-      if (watching) game.searchParams.set('watch', '1');
-      link.href = game.href;
-      link.textContent = watching ? 'Watch this room' : hasRoom ? 'Join this room' : 'Open hosted game';
-      document.getElementById('game-description').textContent =
-        'Open the hosted game to create a room, join a team, or watch live. The hosted game requires ChatGPT sign-in.';
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Holiday Team Fused</title>
+<style>
+:root{color-scheme:dark;--ink:#f9f5ee;--muted:#b7b7d1;--panel:#191b35;--line:#353853;--lime:#dbf979;--accent:#bfb0ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 75% 0%,#32265f 0%,transparent 49%),#101122;color:var(--ink);font:1rem system-ui,sans-serif;min-height:100vh}
+main{max-width:1000px;margin:auto;padding:32px 20px 48px}header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:17px;margin-bottom:38px;font-weight:800}small, p{color:var(--muted)}p{line-height:1.55}h1{font-size:clamp(2.2rem,7vw,4.8rem);line-height:1.02;letter-spacing:-.055em;margin:.18em 0 .32em}h2{margin:0 0 15px}h3{margin:0 0 8px}.tag{color:var(--accent);font-weight:750;letter-spacing:.13em;text-transform:uppercase;font-size:.86rem}.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:19px;margin-top:26px}.card{background:var(--panel);border:1px solid var(--line);padding:clamp(19px,4vw,32px);border-radius:21px}.highlight{border-color:#565084}.code{font-size:clamp(1.8rem,8vw,3rem);letter-spacing:.13em;color:var(--lime);font-weight:900;margin:7px 0 14px}.controls{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}button,input,#guess-answer,#question-count{font:inherit;border-radius:11px;min-height:47px}button{padding:10px 16px;font-weight:800;color:#151729;background:var(--lime);border:1px solid transparent;cursor:pointer}button.secondary{background:transparent;color:var(--ink);border-color:#62658a}button:disabled{opacity:.55;cursor:default}input,#guess-answer,#question-count{padding:10px 12px;width:100%;color:var(--ink);background:#111228;border:1px solid #62658a}label{display:block;font-weight:700;margin:12px 0 6px}form button{margin-top:14px}.team,.answer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;overflow-wrap:anywhere}.answer em{font-style:normal;color:var(--lime);font-weight:850}.blank{color:var(--muted)}.points{font-variant-numeric:tabular-nums;color:var(--lime);font-weight:850}.question{font-size:clamp(1.65rem,5.5vw,3.2rem)}#message{color:#ffc9d3;min-height:1.5em;margin-top:16px}a{color:var(--accent)}.tie{display:flex;align-items:center;gap:10px}.tie input{width:22px;min-height:26px}.join-code{margin:18px 0 10px;display:grid;justify-items:start;gap:7px}.join-code canvas{width:min(100%,220px);height:auto;image-rendering:pixelated;border-radius:8px}:focus-visible{outline:3px solid var(--accent);outline-offset:3px}@media(max-width:640px){.grid{grid-template-columns:1fr}header{margin-bottom:24px}main{padding-top:20px}}
+dialog{width:min(680px,calc(100% - 28px));max-height:90dvh;padding:24px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px}dialog::backdrop{background:#08091ab8}dialog details{padding:12px 0;border-bottom:1px solid var(--line)}dialog summary{cursor:pointer;font-weight:700}dialog select,dialog textarea{width:100%;padding:10px 12px;background:#111228;color:var(--ink);border:1px solid #62658a;border-radius:11px;font:inherit;resize:vertical}dialog [role=status]{color:#ffc9d3;flex-basis:100%;margin:0}dialog [role=status]:empty{display:none}dialog h3:not(:first-child){margin-top:18px}dialog .controls{position:sticky;bottom:-24px;padding:12px 0;background:var(--panel)}
+.host-link{display:inline-flex;align-items:center;min-height:47px;padding:10px 16px;border-radius:11px;background:var(--lime);color:#151729;font-weight:800;text-decoration:none}
+</style></head><body><main>
+<header><span>◈ &nbsp; Holiday Team Fused</span><small>6 teams · 3 rounds</small></header>
+<div id="instructions">
+  <h1>Holiday Team Fused</h1>
+  <p>Host a game on your laptop and share the room QR code with players on the same Wi-Fi.</p>
+  <a class="host-link" href="https://github.com/STEM-Solano/HolidayGame#run-on-a-local-network">View setup instructions</a>
+</div>
+<div id="game" hidden>
+  <div class="tag">Survey guessing game</div>
+  <h1>Guess what<br>the crowd said.</h1>
+  <p>Guess the most popular answers from published YouGov polls. The host sets the number of questions per round. Six teams start. Four advance to the semifinal, then two face off in the final.</p>
+  <div class="grid">
+    <section class="card highlight">
+      <h2>Join a game</h2>
+      <form action="https://crowd-score-survey-game.mistycone2.chatgpt.site/" method="get">
+        <label for="code">Room code</label>
+        <input id="code" name="room" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters">
+        <button type="submit">Join team</button>
+        <button type="submit" name="watch" value="1" class="secondary">Watch live</button>
+      </form>
+    </section>
+    <section class="card">
+      <h2>Host a game</h2>
+      <p>Share the room link, then open and score each question.</p>
+      <a class="host-link" href="https://crowd-score-survey-game.mistycone2.chatgpt.site/">Create room</a>
+    </section>
+  </div>
+</div>
+</main>
+<script>
+  if (!/\/docs(?:\/|$)/.test(location.pathname)) {
+    document.getElementById('instructions').hidden = true;
+    document.getElementById('game').hidden = false;
+    const params = new URLSearchParams(location.search);
+    const room = params.get('room')?.toUpperCase();
+    if (room && /^[A-Z0-9]{6}$/.test(room)) {
+      document.getElementById('code').value = room;
+      if (params.get('watch') === '1') {
+        const watch = new URL("https://crowd-score-survey-game.mistycone2.chatgpt.site/");
+        watch.searchParams.set('room', room);
+        watch.searchParams.set('watch', '1');
+        location.replace(watch.href);
+      }
     }
-  </script>
-</body>
-</html>
+  }
+</script>
+</body></html>
